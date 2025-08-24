@@ -1,0 +1,57 @@
+@font-face {
+  font-family: 'Geologica Variable';
+  font-style: normal;
+  font-display: swap;
+  src: url('/fonts/Geologica_VF.woff2') format('woff2-variations');
+}
+
+@font-face {
+  font-family: 'Adjusted Arial Fallback';
+  src: local(Arial);
+  size-adjust: 106%;
+  ascent-override: normal;
+  descent-override: 24%;
+  line-gap-override: normal;
+}
+
+/* https://www.fluid-type-scale.com/calculate?minFontSize=16&minWidth=375&minRatio=1.25&maxFontSize=18&maxWidth=1920&maxRatio=1.33&steps=s%2Cp%2Ch6%2Ch5%2Ch4%2Ch3%2Ch2%2C+h1&baseStep=p&prefix=fs&useContainerWidth=false&includeFallbacks=false&useRems=true&remValue=16&decimals=2&previewFont=Geologica&previewText=Almost+before+we+knew+it%2C+we+had+left+the+ground&previewWidth=375 */
+
+:root {
+  --fs-s: clamp(0.8rem, 0.05vi + 0.79rem, 0.85rem);
+  --fs-p: clamp(1rem, 0.13vi + 0.97rem, 1.13rem);
+  --fs-h6: clamp(1.25rem, 0.26vi + 1.19rem, 1.5rem);
+  --fs-h5: clamp(1.56rem, 0.44vi + 1.46rem, 1.99rem);
+  --fs-h4: clamp(1.95rem, 0.72vi + 1.78rem, 2.65rem);
+  --fs-h3: clamp(2.44rem, 1.12vi + 2.18rem, 3.52rem);
+  --fs-h2: clamp(3.05rem, 1.69vi + 2.66rem, 4.68rem);
+  --fs-h1: clamp(3.81rem, 2.5vi + 3.23rem, 6.23rem);
+}
+
+:where(span) {font-size: var(--fs-s)}
+:where(p) {font-size: var(--fs-p)}
+:where(h6) {font-size: var(--fs-h6)}
+:where(h5) {font-size: var(--fs-h5)}
+:where(h4) {font-size: var(--fs-h4)}
+:where(h3) {font-size: var(--fs-h3)}
+:where(h2) {font-size: var(--fs-h2)}
+:where(h1) {font-size: var(--fs-h1)}
+
+:where(h6, h5, h4, h3, h2, h1) {
+  font-family: 'Geologica Variable', 'Adjusted Arial Fallback', sans-serif;
+  font-weight: 700;
+  font-variation-settings: "SHRP" 50;
+}
+
+:where(p, ul, ol, li, a, button, label, input, textarea) {
+  font-size: var(--fs-p);
+  font-family: 'Geologica Variable', 'Adjusted Arial Fallback', sans-serif;
+  font-weight: 400;
+}
+
+:where(h6, h5, h4, h3, h2, h1) {
+  line-height: 1.2;
+}
+
+:where(p) {
+  line-height: 1.5;
+}

@@ -1,0 +1,53 @@
+
+
+@property --z-index-highest {
+  syntax: "<number>";
+  initial-value: 5;
+  inherits: false;
+}
+
+@property --clr-primary {
+  syntax: "<color>";
+  initial-value: oklch(0.8818 0.1632 92.43);
+  inherits: false;
+}
+
+@property --clr-txt-strong {
+  syntax: "<color>";
+  initial-value: oklch(0.1339 0.0026 106.74);
+  inherits: false;
+}
+
+@property --clr-txt-weak {
+  syntax: "<color>";
+  initial-value: oklch(0.2761 0.0091 97.67);
+  inherits: false;
+}
+
+/* Physics Interaction Properties */
+@property --physics-restitution {
+  syntax: "<number>";
+  initial-value: 0.6;
+  inherits: false;
+}
+
+@property --physics-friction {
+  syntax: "<number>";
+  initial-value: 0.3;
+  inherits: false;
+}
+
+@property --physics-density {
+  syntax: "<number>";
+  initial-value: 1.0;
+  inherits: false;
+}
+
+
+/* Animation Progress Properties */
+/* For coordinating complex animations with physics updates */
+@property --expansion-progress {
+  syntax: "<percentage>";
+  initial-value: 0%;
+  inherits: false;
+}
