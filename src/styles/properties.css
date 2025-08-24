@@ -1,5 +1,11 @@
 
 
+@property --z-index-high {
+  syntax: "<number>";
+  initial-value: 4;
+  inherits: false;
+}
+
 @property --z-index-highest {
   syntax: "<number>";
   initial-value: 5;

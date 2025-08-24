@@ -1,9 +1,16 @@
 <script>
   import Header from "@/sections/Header.svelte";
+  import HeroSection from "@/sections/HeroSection.svelte";
+  import ProjectsSection from "@/sections/ProjectsSection.svelte";
+  import SkillsSection from "./sections/SkillsSection.svelte";
+  import CallToActionSection from "./sections/CallToActionSection.svelte";
+  import Footer from "./sections/Footer.svelte";
 
     // We'll import and initialize physics in Phase 4
   // For now, just checking our structure works
   
+  let registerBoundary = null;
+
   let loaded = false;
   
   // In Svelte, onMount is like useEffect(() => {}, [])
@@ -20,20 +27,19 @@
 
 <Header />
 
-<main>
-  {#if loaded}
-    <h1>Step’s Portfolio: The Foundationing</h1>
-    <h2>Poopy poopito</h2>
-    <h3>Wot is happen?</h3>
-    <h4>I no know.</h4>
-    <h5>Who are you, who who, who who</h5>
-    <h6>Sick slacks bitch</h6>
-    <p>Are you reddy? Reloading is hot hot hot.</p>
-    <span>I span your entire anus</span>
-    {:else}
+{#if loaded}
+  <main>
+    <HeroSection {registerBoundary} />
+    <ProjectsSection {registerBoundary} />
+    <SkillsSection {registerBoundary} />
+    <CallToActionSection {registerBoundary} />
+  </main>
+  <Footer />
+{:else}
+  <div class="loading">
     <p>Loading...</p>
-  {/if}
-</main>
+  </div>
+{/if}
 
 <style>
 
@@ -41,7 +47,7 @@
     max-width: 1920px;
     margin-inline: auto;
     padding-block: var(--space-24-32px);
-    border: 1px solid brown;
+    border: 3px solid brown;
   }
 
 </style>

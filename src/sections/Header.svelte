@@ -55,7 +55,7 @@
     top: 0;
     left: 0;
     right: 0;
-    z-index: var(--z-index-highest);
+    z-index: var(--z-index-high);
     /* The header container extends from viewport top */
     height: 120px; /* Space for strings + sign */
     pointer-events: none; /* Let clicks pass through empty space */
