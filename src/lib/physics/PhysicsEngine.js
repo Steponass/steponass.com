@@ -12,9 +12,15 @@ export class PhysicsEngine {
     this.boundaries = [];
     this.balls = [];
 
+
+    this.domBoundaries = []; // Track DOM-derived boundaries separately from viewport boundaries
+    this.boundaryMappers = []; // Track all boundary mappers using this engine
+
     // Debug mode helps us see what's happening behind the scenes
     this.debugMode = true; // We'll make this configurable later
 
+    this.log = this.debugMode ? console.log : () => {};
+    
     console.log('PhysicsEngine initialized');
   }
 
@@ -200,43 +206,65 @@ export class PhysicsEngine {
     });
   }
 
-  /**
-   * Draw debug boundaries so we can see the invisible walls
-   */
-  renderDebugBoundaries() {
-    if (!this.boundaries.length) return;
+ /**
+ * Draw debug boundaries so we can see the invisible walls
+ * Now handles both viewport and DOM boundaries with different colors
+ */
+renderDebugBoundaries() {
+  this.ctx.save();
 
-    this.ctx.save();
+  // Draw viewport boundaries (green, as before)
+  if (this.boundaries.length) {
     this.ctx.strokeStyle = '#00ff00';
     this.ctx.lineWidth = 2;
     this.ctx.setLineDash([5, 5]);
 
     this.boundaries.forEach(boundary => {
-      const { x, y } = boundary.position;
-      const bounds = boundary.bounds;
-      const width = bounds.max.x - bounds.min.x;
-      const height = bounds.max.y - bounds.min.y;
-
-      // Draw boundary rectangle
-      this.ctx.strokeRect(
-        x - width / 2,
-        y - height / 2,
-        width,
-        height
-      );
-
-      // Label the boundary
-      this.ctx.fillStyle = '#00ff00';
-      this.ctx.font = '12px monospace';
-      this.ctx.fillText(
-        boundary.label || 'boundary',
-        x - width / 2 + 5,
-        y - height / 2 + 15
-      );
+      this.drawBoundaryDebug(boundary, '#00ff00', 'viewport');
     });
-
-    this.ctx.restore();
   }
+
+  // Draw DOM boundaries (blue, to distinguish them)
+  if (this.domBoundaries.length) {
+    this.ctx.strokeStyle = '#0066ff';
+    this.ctx.lineWidth = 2;
+    this.ctx.setLineDash([3, 3]);
+
+    this.domBoundaries.forEach(boundaryInfo => {
+      this.drawBoundaryDebug(boundaryInfo.body, '#0066ff', 'DOM');
+    });
+  }
+
+  this.ctx.restore();
+}
+
+/**
+ * Helper method to draw a single boundary
+ */
+drawBoundaryDebug(boundary, color, type) {
+  const { x, y } = boundary.position;
+  const bounds = boundary.bounds;
+  const width = bounds.max.x - bounds.min.x;
+  const height = bounds.max.y - bounds.min.y;
+
+  // Draw boundary rectangle
+  this.ctx.strokeStyle = color;
+  this.ctx.strokeRect(
+    x - width / 2,
+    y - height / 2,
+    width,
+    height
+  );
+
+  // Label the boundary
+  this.ctx.fillStyle = color;
+  this.ctx.font = '12px monospace';
+  this.ctx.fillText(
+    `${type}: ${boundary.label || 'boundary'}`,
+    x - width / 2 + 5,
+    y - height / 2 + 15
+  );
+}
 
   /**
    * Display debug information on canvas
@@ -252,6 +280,7 @@ export class PhysicsEngine {
       `Canvas: ${this.canvas.width}x${this.canvas.height}`,
       `Balls: ${this.balls.length}`,
       `Boundaries: ${this.boundaries.length}`,
+      `DOM Boundaries: ${this.domBoundaries.length}`,
       `Gravity: ${this.engine.world.gravity.y}`
     ];
 
@@ -492,4 +521,54 @@ export class PhysicsEngine {
       console.log('Initial ball created above launcher position');
     }
   }
+
+  /**
+ * Register a DOM boundary with the physics engine
+ * This is called by BoundaryMapper when elements register themselves
+ */
+registerDomBoundary(physicsBody, metadata = {}) {
+  if (!physicsBody || !this.world) {
+    console.warn('PhysicsEngine: Cannot register DOM boundary - missing body or world');
+    return false;
+  }
+
+  try {
+    // The body should already be added to the world by BoundaryMapper
+    // We just need to track it for debugging and cleanup
+    this.domBoundaries.push({
+      body: physicsBody,
+      type: 'dom-element',
+      ...metadata
+    });
+
+    this.log(`PhysicsEngine: DOM boundary registered: ${physicsBody.label}`);
+    return true;
+  } catch (error) {
+    console.error('PhysicsEngine: Failed to register DOM boundary:', error);
+    return false;
+  }
+}
+
+/**
+ * Remove a DOM boundary from tracking
+ * The BoundaryMapper handles removing from the physics world
+ */
+unregisterDomBoundary(physicsBody) {
+  const index = this.domBoundaries.findIndex(boundary => boundary.body === physicsBody);
+  if (index !== -1) {
+    this.domBoundaries.splice(index, 1);
+    this.log(`PhysicsEngine: DOM boundary unregistered: ${physicsBody.label}`);
+  }
+}
+
+/**
+ * Register a BoundaryMapper instance with this engine
+ * This allows the engine to coordinate with multiple mappers
+ */
+registerBoundaryMapper(boundaryMapper) {
+  if (!this.boundaryMappers.includes(boundaryMapper)) {
+    this.boundaryMappers.push(boundaryMapper);
+    this.log('PhysicsEngine: BoundaryMapper registered');
+  }
+}
 }

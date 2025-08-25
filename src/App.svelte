@@ -1,4 +1,5 @@
 <script>
+  import PhysicsAwareSection from "./lib/components/PhysicsAwareSection.svelte";
   import Header from "@/sections/Header.svelte";
   import PhysicsCanvas from "./lib/components/PhysicsCanvas.svelte";
   import HeroSection from "@/sections/HeroSection.svelte";
@@ -29,7 +30,9 @@
   });
 </script>
 
-<Header />
+<PhysicsAwareSection sectionId="header-section" debug={true}>
+  <Header />
+</PhysicsAwareSection>
 
 <PhysicsCanvas debug={true} />
 

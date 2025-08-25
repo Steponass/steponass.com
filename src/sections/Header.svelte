@@ -1,34 +1,46 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, getContext } from 'svelte';
   
-  // We'll use these props later when integrating with physics
-  export let registerBoundary = null; // Function from PhysicsAwareSection
-  export let physicsEnabled = false;
+  // Get access to physics registration functions from PhysicsAwareSection
+  const physicsContext = getContext('physics');
   
   let headerElement;
   let signElement;
+  let registeredBoundary = null;
+  let hasMounted = false;
+  
+  // Subscribe to the physics readiness store
+  $: isReady = physicsContext?.isPhysicsReady;
+  
+  // Reactive statement - now listens to the store value
+  $: if (hasMounted && signElement && $isReady && !registeredBoundary) {
+    console.log('Header: Physics is ready, attempting boundary registration...');
+    
+    registeredBoundary = physicsContext.registerBoundary(
+      'navigation-header', // unique ID
+      signElement,         // the DOM element to map
+      {
+        restitution: 0.8,  // make it extra bouncy
+        friction: 0.2,     // low friction for fun bounces
+        label: 'nav-header' // debug label
+      }
+    );
+    
+    if (registeredBoundary) {
+      console.log('Header: Successfully registered as physics boundary');
+    } else {
+      console.warn('Header: Failed to register physics boundary');
+    }
+  }
   
   onMount(() => {
-    // This is where we'll register the sign (not the strings) as a physics boundary
-    // For now, just logging to show the concept
-    if (signElement) {
-      const rect = signElement.getBoundingClientRect();
-      console.log('Sign boundary:', {
-        element: signElement,
-        bounds: rect,
-        isPhysicsBody: true
-      });
-    }
+    console.log('Header: Component mounted');
+    hasMounted = true;
     
-    // The header element includes strings - not a physics body
-    if (headerElement) {
-      const rect = headerElement.getBoundingClientRect();
-      console.log('Full header area (including strings):', {
-        element: headerElement,
-        bounds: rect,
-        isPhysicsBody: false
-      });
-    }
+    // Cleanup function
+    return () => {
+      console.log('Header: Component unmounting');
+    };
   });
 </script>
 
