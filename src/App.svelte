@@ -33,10 +33,9 @@
   <Header />
 </PhysicsAwareSection>
 
-<PhysicsCanvas debug={true} />
-
 {#if loaded}
   <main>
+    <PhysicsCanvas debug={true} />
     <!-- Temporary interaction switch for debugging -->
     <div
       style="position: fixed; top: 100px; right: 20px; z-index: 10; background: white; padding: 10px;"
@@ -80,6 +79,7 @@
 
 <style>
   main {
+    position: relative;
     max-width: 1920px;
     margin-inline: auto;
     /* padding-block: var(--space-24-32px); */

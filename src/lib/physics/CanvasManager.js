@@ -23,31 +23,33 @@ export class CanvasManager {
   }
 
   /**
-   * Calculate the optimal canvas height (full document height)
+   * Calculate the optimal canvas height (main element height)
    */
   calculateCanvasHeight() {
-    // Use document height instead of viewport height for document-relative physics
-    const documentHeight = Math.max(
-      document.body.scrollHeight,
-      document.body.offsetHeight,
-      document.documentElement.clientHeight,
-      document.documentElement.scrollHeight,
-      document.documentElement.offsetHeight
-    );
+    // Use main element's parent dimensions since canvas is positioned inside main
+    const parent = this.canvas.parentElement;
+    if (!parent) {
+      return window.innerHeight;
+    }
 
-    this.log('CanvasManager - Using document height:', {
-      documentHeight,
-      viewportHeight: window.innerHeight
-    });
-
-    return documentHeight;
+    const parentHeight = parent.offsetHeight;
+    this.log('CanvasManager - Using parent element height:', parentHeight);
+    return parentHeight;
   }
 
   /**
-   * Calculate the optimal canvas width (full viewport width)
+   * Calculate the optimal canvas width (main element width)
    */
   calculateCanvasWidth() {
-    return window.innerWidth;
+    // Use main element's parent dimensions since canvas is positioned inside main
+    const parent = this.canvas.parentElement;
+    if (!parent) {
+      return window.innerWidth;
+    }
+
+    const parentWidth = parent.offsetWidth;
+    this.log('CanvasManager - Using parent element width:', parentWidth);
+    return parentWidth;
   }
 
   /**
@@ -99,12 +101,13 @@ export class CanvasManager {
       this.updateCanvasSize();
     });
 
-    // Observe document element (viewport changes) and footer (footer size changes)
-    this.resizeObserver.observe(document.documentElement);
-
-    const footer = document.querySelector(this.options.footerSelector);
-    if (footer) {
-      this.resizeObserver.observe(footer);
+    // Observe the parent element (main) for size changes
+    const parent = this.canvas.parentElement;
+    if (parent) {
+      this.resizeObserver.observe(parent);
+    } else {
+      // Fallback to document element if no parent
+      this.resizeObserver.observe(document.documentElement);
     }
 
     // Set up event listeners for cases ResizeObserver might miss
@@ -162,4 +165,5 @@ export class CanvasManager {
     this.lastHeight = 0;
     return this.updateCanvasSize();
   }
+
 }

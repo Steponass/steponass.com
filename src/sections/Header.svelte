@@ -34,6 +34,11 @@
 
     if (registeredBoundary) {
       console.log("Header: Successfully registered as physics boundary");
+      
+        // Debug the alignment
+      setTimeout(() => {
+    physicsContext.registerBoundary.__mapper?.debugCoordinateAlignment('navigation-header');
+  }, 100);
     } else {
       console.warn("Header: Failed to register physics boundary");
     }

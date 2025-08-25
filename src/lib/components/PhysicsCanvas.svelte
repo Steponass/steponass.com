@@ -75,7 +75,7 @@
       // Initialize the physics world
       if (engine.init()) {
         console.log("PhysicsCanvas: Physics engine initialized successfully");
-
+    
         // Start the physics simulation
         engine.start();
 
@@ -99,26 +99,24 @@
   /**
    * Handle canvas size changes and update physics accordingly
    */
-  function setupPhysicsResizeHandler() {
-    if (!canvasManager || !engine) return;
+   function setupPhysicsResizeHandler() {
+  if (!canvasManager || !engine) return;
 
-    // Store original canvas update method
-    const originalUpdate = canvasManager.updateCanvasSize.bind(canvasManager);
+  // Store original canvas update method
+  const originalUpdate = canvasManager.updateCanvasSize.bind(canvasManager);
 
-    // Override with physics-aware version
-    canvasManager.updateCanvasSize = function () {
-      const sizeChanged = originalUpdate();
+  // Override with physics-aware version
+  canvasManager.updateCanvasSize = function () {
+    const sizeChanged = originalUpdate();
 
-      if (sizeChanged && engine) {
-        console.log(
-          "PhysicsCanvas: Canvas size changed, updating physics boundaries"
-        );
-        engine.updateBoundaries();
-      }
+    if (sizeChanged && engine) {
+      console.log('PhysicsCanvas: Canvas size changed, updating physics boundaries');
+      engine.updateBoundaries();
+    }
 
-      return sizeChanged;
-    };
-  }
+    return sizeChanged;
+  };
+}
 
   // Reactive statement - updates when enabled prop changes
   $: if (engine) {
@@ -144,15 +142,18 @@
 
 <style>
   .physics-canvas {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
+    right: 0;
+    bottom: 0;
     z-index: var(--z-index-physics-canvas);
 
-    /* Canvas covers full document height */
-    width: 100vw;
-    height: 100vh; /* Will be overridden by JavaScript to full document height */
+    /* Canvas covers the main element area */
+    width: 100%;
+    height: 100%;
     pointer-events: none; /* Let clicks pass through to underlying content */
+    overflow: hidden;
   }
 
   .debug-mode {

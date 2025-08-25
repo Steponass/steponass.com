@@ -12,6 +12,7 @@ export class PhysicsEngine {
     this.boundaries = [];
     this.balls = [];
 
+
     this.domBoundaries = []; // Track DOM-derived boundaries separately from viewport boundaries
     this.boundaryMappers = []; // Track all boundary mappers using this engine
 
@@ -20,11 +21,6 @@ export class PhysicsEngine {
 
     this.log = this.debugMode ? console.log : () => { };
 
-    // Scroll tracking for document-relative positioning
-    this.scrollX = 0;
-    this.scrollY = 0;
-    this.documentHeight = 0;
-    this.viewportHeight = 0;
 
     console.log('PhysicsEngine initialized');
   }
@@ -45,8 +41,8 @@ export class PhysicsEngine {
       // Create the runner - this is what keeps the physics updating
       this.runner = Matter.Runner.create();
 
-      // Set up scroll tracking
-      this.setupScrollTracking();
+      // Create boundaries around the canvas edges
+      this.createViewportBoundaries();
 
       // Create the initial ball
       this.createInitialBall();
@@ -141,11 +137,7 @@ export class PhysicsEngine {
         // Clear the entire canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        // Apply scroll offset to canvas context for document-relative rendering
-        this.ctx.save();
-        this.ctx.translate(-this.scrollX, -this.scrollY);
-
-        // Draw all the physics objects
+        // Draw all the physics objects (no coordinate translation needed)
         this.renderBalls();
 
         // Draw debug information if enabled
@@ -153,8 +145,6 @@ export class PhysicsEngine {
           this.renderDebugBoundaries();
           this.renderDebugInfo();
         }
-
-        this.ctx.restore();
 
         // Schedule next frame
         this.renderLoopId = requestAnimationFrame(render);
@@ -169,6 +159,8 @@ export class PhysicsEngine {
     console.log('Starting physics render loop');
     this.renderLoopId = requestAnimationFrame(render);
   }
+
+
 
   /**
    * Draw all balls on the canvas
@@ -292,9 +284,7 @@ export class PhysicsEngine {
       `Balls: ${this.balls.length}`,
       `Boundaries: ${this.boundaries.length}`,
       `DOM Boundaries: ${this.domBoundaries.length}`,
-      `Gravity: ${this.engine.world.gravity.y}`,
-      `Scroll: (${this.scrollX}, ${this.scrollY})`,
-      `Doc Height: ${this.documentHeight}`
+      `Gravity: ${this.engine.world.gravity.y}`
     ];
 
     // Draw background for text - position relative to viewport, not document
@@ -319,36 +309,34 @@ export class PhysicsEngine {
 
   /**
    * Create invisible boundaries around the canvas edges
-   * These act like walls that keep balls from falling out of view
+   * These act like walls that keep balls within the main content area
    */
   createViewportBoundaries() {
     if (!this.canvas || !this.world) {
       console.error('Canvas or world not available for boundary creation');
       return;
     }
-
+  
+    this.clearBoundaries();
+  
     const width = this.canvas.width;
     const height = this.canvas.height;
-    const thickness = 50; // How thick our invisible walls are
+    const thickness = 25;
 
-    // Clear existing boundaries first
-    this.clearBoundaries();
-
-    // Create four walls around the viewport
     const boundaries = [
-      // Floor - bottom boundary (balls will bounce off this)
+      // Floor - bottom boundary  
       this.createBoundary(width / 2, height + thickness / 2, width, thickness, 'floor'),
-
-      // Ceiling - top boundary (prevents balls from going too high)
+      
+      // Ceiling - top boundary
       this.createBoundary(width / 2, -thickness / 2, width, thickness, 'ceiling'),
-
-      // Left wall
-      this.createBoundary(-thickness / 2, height / 2, thickness, height, 'left-wall'),
-
-      // Right wall  
-      this.createBoundary(width + thickness / 2, height / 2, thickness, height, 'right-wall')
+      
+      // Left wall - positioned inside the left edge of canvas
+      this.createBoundary(thickness / 25, height / 2, thickness, height, 'left-wall'),
+      
+      // Right wall - positioned inside the right edge of canvas  
+      this.createBoundary(width - thickness / 25, height / 4, thickness, height, 'right-wall')
     ];
-
+  
     // Add all boundaries to the physics world
     boundaries.forEach(boundary => {
       if (boundary) {
@@ -356,8 +344,14 @@ export class PhysicsEngine {
         this.boundaries.push(boundary);
       }
     });
-
-    console.log(`Created ${boundaries.length} viewport boundaries`);
+  
+    console.log(`Created ${boundaries.length} canvas boundaries for ${width}x${height} area`);
+    console.log('Boundary positions:');
+    boundaries.forEach((boundary, i) => {
+      if (boundary) {
+        console.log(`  ${boundary.label}: (${boundary.position.x}, ${boundary.position.y})`);
+      }
+    });
   }
 
   /**
@@ -456,6 +450,17 @@ export class PhysicsEngine {
     }
 
     console.log('Boundary update complete');
+
+    // Force update all DOM boundary positions after canvas resize
+    // Use a small delay to ensure DOM layout has settled
+    requestAnimationFrame(() => {
+      this.forceUpdateAllBoundaryPositions();
+    });
+
+    // Also update again after a longer delay to catch any late layout changes
+    setTimeout(() => {
+      this.forceUpdateAllBoundaryPositions();
+    }, 100);
   }
 
   /**
@@ -511,8 +516,8 @@ export class PhysicsEngine {
   }
 
   /**
-   * Create the initial ball above the launcher container
-   * Using document-relative positioning
+   * Create multiple initial balls in the upper area of the canvas
+   * Using canvas-relative positioning
    */
   createInitialBall() {
     if (!this.canvas) {
@@ -520,22 +525,21 @@ export class PhysicsEngine {
       return;
     }
 
-    // Calculate position above the launcher container
-    // Launcher is at right: 0%, bottom: 2%, width: 10%
     const canvasWidth = this.canvas.width;
+    const canvasHeight = this.canvas.height;
 
-    // Use document height for positioning, not canvas height
-    const documentHeight = this.documentHeight || window.innerHeight;
-
-    // Position the ball above where the launcher would be
-    const ballX = canvasWidth * 0.88; // 95% from left (near right edge)
-    const ballY = documentHeight * 0.01;  // 20% from top of document (well above the launcher)
-
-    // Create ball with 56px diameter (28px radius) - middle of your 48-64px range
-    const ball = this.addBall(ballX, ballY, 28);
-
-    if (ball) {
-      console.log(`Initial ball created at document position (${ballX}, ${ballY})`);
+    // Create multiple balls with slight position variations
+    const numBalls = 9;
+    for (let i = 0; i < numBalls; i++) {
+      const ballX = canvasWidth * (0.82 + i * 0.01); // Spread horizontally from 82% to 86%
+      const ballY = canvasHeight * (0.05 + i * 0.02); // Stagger vertically in upper 15% of canvas
+      const radius = 32 + Math.random() * 8; // Vary size (32-40px)
+      
+      const ball = this.addBall(ballX, ballY, radius);
+      
+      if (ball) {
+        console.log(`Ball ${i + 1} created at canvas position (${ballX.toFixed(1)}, ${ballY.toFixed(1)}) with radius ${radius.toFixed(1)}`);
+      }
     }
   }
 
@@ -590,76 +594,30 @@ export class PhysicsEngine {
   }
 
   /**
-   * Set up scroll event listeners to track viewport position
-   */
-  setupScrollTracking() {
-    // Get initial scroll position and document height
-    this.updateScrollInfo();
-
-    // Listen for scroll events
-    window.addEventListener('scroll', () => {
-      this.updateScrollInfo();
-      this.updateBoundaryPositions();
-    });
-
-    // Listen for resize events to update document height
-    window.addEventListener('resize', () => {
-      this.updateScrollInfo();
-      this.updateBoundaryPositions();
-    });
-
-    console.log('Scroll tracking initialized');
-  }
-
-  /**
-   * Update scroll position and document dimensions
-   */
-  updateScrollInfo() {
-    this.scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-    this.scrollY = window.pageYOffset || document.documentElement.scrollTop;
-    this.documentHeight = Math.max(
-      document.body.scrollHeight,
-      document.body.offsetHeight,
-      document.documentElement.clientHeight,
-      document.documentElement.scrollHeight,
-      document.documentElement.offsetHeight
-    );
-    this.viewportHeight = window.innerHeight;
-
-    if (this.debugMode) {
-      console.log(`PhysicsEngine: Scroll: (${this.scrollX}, ${this.scrollY}), Doc height: ${this.documentHeight}, Viewport: ${this.viewportHeight}`);
-    }
-  }
-
-  /**
-   * Convert viewport coordinates to document coordinates
-   */
-  viewportToDocument(x, y) {
-    return {
-      x: x + this.scrollX,
-      y: y + this.scrollY
-    };
-  }
-
-  /**
-   * Convert document coordinates to viewport coordinates
-   */
-  documentToViewport(x, y) {
-    return {
-      x: x - this.scrollX,
-      y: y - this.scrollY
-    };
-  }
-
-  /**
-   * Update all DOM boundary positions based on current scroll
+   * Update all DOM boundary positions (simplified for canvas-relative coordinates)
    */
   updateBoundaryPositions() {
     if (!this.boundaryMappers.length) return;
 
     this.boundaryMappers.forEach(mapper => {
       if (mapper && typeof mapper.updateBoundaryPositions === 'function') {
-        mapper.updateBoundaryPositions(this.scrollX, this.scrollY);
+        mapper.updateBoundaryPositions();
+      }
+    });
+  }
+
+  /**
+   * Force update all DOM boundary positions (used during canvas resize)
+   * This ensures all boundaries are updated even if their individual ResizeObservers aren't triggered
+   */
+  forceUpdateAllBoundaryPositions() {
+    if (!this.boundaryMappers.length) return;
+
+    console.log('PhysicsEngine: Force updating all DOM boundary positions');
+
+    this.boundaryMappers.forEach(mapper => {
+      if (mapper && typeof mapper.updateBoundaryPositions === 'function') {
+        mapper.updateBoundaryPositions();
       }
     });
   }

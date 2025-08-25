@@ -43,8 +43,8 @@
     console.log("Skills section mounted");
   });
 
-    // Register title element as physics boundary
-    $: if (hasMounted && titleElement && $isReady && !registeredTitleBoundary) {
+  // Register title element as physics boundary
+  $: if (hasMounted && titleElement && $isReady && !registeredTitleBoundary) {
     console.log(
       "SkillsSection: Physics is ready, attempting title boundary registration..."
     );
@@ -64,9 +64,7 @@
         "SkillsSection: Title successfully registered as physics boundary"
       );
     } else {
-      console.warn(
-        "SkillsSection: Failed to register title physics boundary"
-      );
+      console.warn("SkillsSection: Failed to register title physics boundary");
     }
   }
 </script>
@@ -77,10 +75,7 @@
   </div>
   <div class="skills-container">
     {#each skills as skill}
-      <SkillCard
-        title={skill.title}
-        description={skill.description}
-      />
+      <SkillCard title={skill.title} description={skill.description} />
     {/each}
   </div>
 </section>

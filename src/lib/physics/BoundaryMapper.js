@@ -39,10 +39,10 @@ export class BoundaryMapper {
     }
 
     try {
-      // Get element's current position and size in document coordinates
-      const rect = this.getElementDocumentRect(element);
+      // Get element's current position and size (simplified)
+      const rect = this.getElementRect(element);
 
-      // Convert DOM coordinates to physics coordinates
+      // Create physics body from element coordinates
       const physicsBody = this.createPhysicsBody(rect, options, id);
 
       if (physicsBody) {
@@ -64,7 +64,10 @@ export class BoundaryMapper {
           originalRect: rect // Store original rect for position updates
         });
 
-        this.log(`BoundaryMapper: Registered boundary "${id}" at document position (${rect.left}, ${rect.top}), size: ${rect.width}x${rect.height}`);
+        // Set up element-specific ResizeObserver
+        this.setupElementObserver(id, element);
+
+        this.log(`BoundaryMapper: Registered boundary "${id}" at position (${rect.left}, ${rect.top}), size: ${rect.width}x${rect.height}`);
 
         return physicsBody;
       }
@@ -76,33 +79,35 @@ export class BoundaryMapper {
   }
 
   /**
-   * Get element's bounding rectangle in document coordinates (not viewport)
+   * Get element's bounding rectangle relative to main container (simplified)
    */
-  getElementDocumentRect(element) {
-    const viewportRect = element.getBoundingClientRect();
-    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+  getElementRect(element) {
+    const rect = element.getBoundingClientRect();
 
-    // Create a DOMRect-like object with document coordinates
-    const documentRect = {
-      left: viewportRect.left + scrollX,
-      top: viewportRect.top + scrollY,
-      width: viewportRect.width,
-      height: viewportRect.height,
-      right: viewportRect.right + scrollX,
-      bottom: viewportRect.bottom + scrollY,
-      x: viewportRect.left + scrollX,
-      y: viewportRect.top + scrollY,
-      toJSON: () => documentRect
+    // Since we're now working in canvas-relative coordinates (within main),
+    // we can use the viewport rect directly as it's relative to the canvas parent
+    const elementRect = {
+      left: rect.left,
+      top: rect.top,
+      width: rect.width,
+      height: rect.height,
+      right: rect.right,
+      bottom: rect.bottom,
+      x: rect.left,
+      y: rect.top
     };
 
-    return documentRect;
+    if (this.debug) {
+      this.log(`BoundaryMapper: Element rect: (${elementRect.left}, ${elementRect.top}), size: ${elementRect.width}x${elementRect.height}`);
+    }
+
+    return elementRect;
   }
 
   /**
-   * Update boundary positions based on current scroll
+   * Update boundary positions (simplified for canvas-relative coordinates)
    */
-  updateBoundaryPositions(scrollX, scrollY) {
+  updateBoundaryPositions() {
     this.registeredBoundaries.forEach((boundaryInfo, id) => {
       this.updateBoundaryPosition(id, boundaryInfo.element);
     });
@@ -118,8 +123,8 @@ export class BoundaryMapper {
     }
 
     try {
-      // Get current document position
-      const rect = this.getElementDocumentRect(element);
+      // Get current element position (simplified)
+      const rect = this.getElementRect(element);
 
       // Update physics body position
       const centerX = rect.left + (rect.width / 2);
@@ -128,7 +133,7 @@ export class BoundaryMapper {
       Matter.Body.setPosition(boundaryInfo.physicsBody, { x: centerX, y: centerY });
 
       if (this.debug) {
-        this.log(`BoundaryMapper: Updated "${id}" to document position (${centerX}, ${centerY})`);
+        this.log(`BoundaryMapper: Updated "${id}" to position (${centerX.toFixed(1)}, ${centerY.toFixed(1)})`);
       }
     } catch (error) {
       console.error(`BoundaryMapper: Failed to update boundary "${id}":`, error);
@@ -174,5 +179,47 @@ export class BoundaryMapper {
       console.error('BoundaryMapper: Failed to create physics body:', error);
       return null;
     }
+  }
+
+  /**
+ * Set up ResizeObserver for a specific element
+ */
+  setupElementObserver(id, element) {
+    if (!window.ResizeObserver) return;
+
+    const observer = new ResizeObserver(() => {
+      this.updateBoundaryPosition(id, element);
+    });
+
+    observer.observe(element);
+
+    // Store observer for cleanup
+    const boundaryInfo = this.registeredBoundaries.get(id);
+    if (boundaryInfo) {
+      boundaryInfo.resizeObserver = observer;
+    }
+  }
+
+
+  /**
+   * Unregister a boundary and clean up resources
+   */
+  unregisterBoundary(id) {
+    const boundaryInfo = this.registeredBoundaries.get(id);
+    if (!boundaryInfo) return;
+
+    // Remove from physics world
+    if (this.physicsEngine?.world && boundaryInfo.physicsBody) {
+      Matter.World.remove(this.physicsEngine.world, boundaryInfo.physicsBody);
+      this.physicsEngine.unregisterDomBoundary(boundaryInfo.physicsBody);
+    }
+
+    // Clean up ResizeObserver
+    if (boundaryInfo.resizeObserver) {
+      boundaryInfo.resizeObserver.disconnect();
+    }
+
+    this.registeredBoundaries.delete(id);
+    this.log(`BoundaryMapper: Unregistered boundary "${id}"`);
   }
 }
