@@ -1,5 +1,11 @@
 
 
+@property --z-index-physics-canvas {
+  syntax: "<number>";
+  initial-value: 1;
+  inherits: false;
+}
+
 @property --z-index-high {
   syntax: "<number>";
   initial-value: 4;
