@@ -46,7 +46,7 @@
   .footer-section {
     width: 100%;
     padding: 5% 5% 2% 5%;
-    background-color: var(--clr-text-strong);
+    background-color: var(--clr-txt-strong);
     color: white;
   }
   

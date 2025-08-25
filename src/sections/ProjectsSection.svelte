@@ -164,14 +164,17 @@
 <style>
   .projects-section {
     width: 100%;
-    padding: 5% 5%;
+    padding-inline: 5%;
+    border: 2px solid navy;
+  }
+
+  .section-title-container {
+    width: min(66%, 320px);
+    padding-block: var(--space-8-12px);
+    border: 1px solid chocolate;
   }
   
-  h2 {
-    margin-bottom: 5%;
-    text-align: center;
-  }
-  
+
   .projects-grid {
     width: 100%;
     display: flex;
@@ -183,6 +186,7 @@
     display: flex;
     width: 100%;
     gap: 5%;
+    margin-bottom: 5%;
   }
   
   .project-cell {

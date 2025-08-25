@@ -21,13 +21,13 @@
 @property --clr-txt-strong {
   syntax: "<color>";
   initial-value: oklch(0.1339 0.0026 106.74);
-  inherits: false;
+  inherits: true;
 }
 
 @property --clr-txt-weak {
   syntax: "<color>";
   initial-value: oklch(0.2761 0.0091 97.67);
-  inherits: false;
+  inherits: true;
 }
 
 /* Physics Interaction Properties */

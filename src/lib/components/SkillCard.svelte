@@ -27,7 +27,7 @@
   .skill-item {
     width: 100%;
     /* Horizontal rectangular shape */
-    aspect-ratio: 3 / 1;
+    aspect-ratio: 1;
     background: lightgrey;
     border-radius: 999px; /* Large value creates pill/oval shape */
     padding: 0 5%;

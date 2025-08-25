@@ -47,16 +47,16 @@
   .hero-content {
     width: 50%;
     text-align: center;
-    border: 1px solid green;
+    border: 2px solid green;
   }
   
   .launcher-container {
     position: absolute;
-    right: 5%;
-    bottom: 20%;
-    width: 15%;
+    right: 0%;
+    bottom: 2%;
+    width: 10%;
     aspect-ratio: 1 / 2;
-    border: 1px solid green;
+    border: 2px solid green;
   }
   
   .launcher {
@@ -75,23 +75,9 @@
     cursor: pointer;
   }
   
-  /* Responsive adjustments */
   @media (max-width: 991px) {
-    .hero-section {
-      flex-direction: column;
-    }
-    
     .hero-content {
-      width: 90%;
-    }
-    
-    .launcher-container {
-      position: relative;
-      right: auto;
-      bottom: auto;
-      width: 50%;
-      aspect-ratio: 3 / 1;
-      margin-top: 5%;
+      width: 80%;
     }
   }
 </style>

@@ -56,6 +56,7 @@
 <style>
   .project-card {
     width: 100%;
+    min-height: 440px;
     background: lightgrey;
     border-radius: var(--radius-8px);
     overflow: hidden;
@@ -65,9 +66,6 @@
     cursor: pointer;
     position: relative;
     transition: transform 0.2s ease-in-out;
-    &:hover {
-      transform: scale(1.05);
-    }
   }
 
   .square {
