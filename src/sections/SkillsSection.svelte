@@ -1,11 +1,9 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, getContext } from "svelte";
   import SkillCard from "@components/SkillCard.svelte";
 
-  // For future physics integration
-  export let registerBoundary = null;
+  const physicsContext = getContext("physics");
 
-  // Sample skills data
   const skills = [
     {
       title: "Frontend Development",
@@ -35,15 +33,41 @@
 
   let sectionElement;
   let titleElement;
+  let registeredTitleBoundary = null;
+  let hasMounted = false;
+
+  $: isReady = physicsContext?.isPhysicsReady;
 
   onMount(() => {
+    hasMounted = true;
     console.log("Skills section mounted");
   });
 
-  // Will register the title container as a physics boundary in later phases
-  if (titleElement && registerBoundary) {
-    // Future registration code will go here
-    console.log("Title container ready for physics registration");
+    // Register title element as physics boundary
+    $: if (hasMounted && titleElement && $isReady && !registeredTitleBoundary) {
+    console.log(
+      "SkillsSection: Physics is ready, attempting title boundary registration..."
+    );
+
+    registeredTitleBoundary = physicsContext.registerBoundary(
+      "skills-title", // unique ID
+      titleElement, // the DOM element to map
+      {
+        restitution: 0.7, // moderately bouncy
+        friction: 0.4, // moderate friction
+        label: "skills-title", // debug label
+      }
+    );
+
+    if (registeredTitleBoundary) {
+      console.log(
+        "SkillsSection: Title successfully registered as physics boundary"
+      );
+    } else {
+      console.warn(
+        "SkillsSection: Failed to register title physics boundary"
+      );
+    }
   }
 </script>
 
@@ -56,7 +80,6 @@
       <SkillCard
         title={skill.title}
         description={skill.description}
-        {registerBoundary}
       />
     {/each}
   </div>

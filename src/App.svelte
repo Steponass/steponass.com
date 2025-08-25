@@ -8,24 +8,23 @@
   import CallToActionSection from "./sections/CallToActionSection.svelte";
   import Footer from "./sections/Footer.svelte";
 
-  import { enableBallInteraction, enableNormalBrowsing, temporaryBallInteraction, interactionMode } from '@stores/interaction.js';
-
-
-    // We'll import and initialize physics in Phase 4
-  // For now, just checking our structure works
-  
-  let registerBoundary = null;
+  import {
+    enableBallInteraction,
+    enableNormalBrowsing,
+    temporaryBallInteraction,
+    interactionMode,
+  } from "@stores/interaction.js";
 
   let loaded = false;
-  
+
   // In Svelte, onMount is like useEffect(() => {}, [])
-  import { onMount } from 'svelte';
-  
+  import { onMount } from "svelte";
+
   onMount(() => {
     loaded = true;
-    console.log('App mounted successfully');
+    console.log("App mounted successfully");
     return () => {
-      console.log('App unmounting');
+      console.log("App unmounting");
     };
   });
 </script>
@@ -38,21 +37,41 @@
 
 {#if loaded}
   <main>
-
     <!-- Temporary interaction switch for debugging -->
-    <div style="position: fixed; top: 100px; right: 20px; z-index: 10; background: white; padding: 10px;">
+    <div
+      style="position: fixed; top: 100px; right: 20px; z-index: 10; background: white; padding: 10px;"
+    >
       <p>Current mode: {$interactionMode}</p>
       <button on:click={enableNormalBrowsing}>Normal Browsing</button>
       <button on:click={enableBallInteraction}>Ball Interaction</button>
-      <button on:click={() => temporaryBallInteraction(3000)}>Temp Ball (3s)</button>
+      <button on:click={() => temporaryBallInteraction(3000)}
+        >Temp Ball (3s)</button
+      >
     </div>
-    
-    <HeroSection {registerBoundary} />
-    <ProjectsSection {registerBoundary} />
-    <SkillsSection {registerBoundary} />
-    <CallToActionSection {registerBoundary} />
+
+    <PhysicsAwareSection sectionId="hero-section" debug={true}>
+      <HeroSection />
+    </PhysicsAwareSection>
+
+    <PhysicsAwareSection sectionId="projects-section" debug={true}>
+      <ProjectsSection />
+    </PhysicsAwareSection>
+
+    <PhysicsAwareSection sectionId="skills-section" debug={true}>
+      <SkillsSection />
+    </PhysicsAwareSection>
+
+    <PhysicsAwareSection sectionId="CTA-section" debug={true}>
+      <CallToActionSection />
+    </PhysicsAwareSection>
+
   </main>
-  <Footer />
+
+  <PhysicsAwareSection sectionId="CTA-section" debug={true}>
+    <Footer />
+  </PhysicsAwareSection>
+
+
 {:else}
   <div class="loading">
     <p>Loading...</p>
@@ -60,12 +79,10 @@
 {/if}
 
 <style>
-
   main {
     max-width: 1920px;
     margin-inline: auto;
-    padding-block: var(--space-24-32px);
+    /* padding-block: var(--space-24-32px); */
     border: 3px solid brown;
   }
-
 </style>

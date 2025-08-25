@@ -1,5 +1,5 @@
 <script>
-  import { onMount, createEventDispatcher } from "svelte";
+  import { onMount, createEventDispatcher, getContext } from "svelte";
 
   // Props for the card
   export let title = "Project Title";
@@ -7,8 +7,9 @@
   export let shape = "rectangle"; // "rectangle" or "square"
   export let techStack = [];
 
-  // For physics integration later
-  export let registerBoundary = null;
+
+  // Get access to physics registration functions from PhysicsAwareSection
+  const physicsContext = getContext("physics");
 
   // For opening the modal
   const dispatch = createEventDispatcher();
@@ -23,13 +24,42 @@
   }
 
   let cardElement;
+  let registeredBoundary = null;
+  let hasMounted = false;
+
+  // Subscribe to the physics readiness store
+  $: isReady = physicsContext?.isPhysicsReady;
 
   onMount(() => {
-    // Will register with physics engine in later phase
-    if (cardElement && registerBoundary) {
-      // Future physics boundary registration will go here
-    }
+    hasMounted = true;
   });
+
+  // Register card element as physics boundary
+  $: if (hasMounted && cardElement && $isReady && !registeredBoundary) {
+    console.log(
+      `ProjectCard "${title}": Physics is ready, attempting boundary registration...`
+    );
+
+    registeredBoundary = physicsContext.registerBoundary(
+      `project-card-${title.toLowerCase().replace(/\s+/g, "-")}`, // unique ID based on title
+      cardElement, // the DOM element to map
+      {
+        restitution: 0.6, // moderately bouncy
+        friction: 0.3, // low friction for smooth interactions
+        label: `project-card-${title}`, // debug label
+      }
+    );
+
+    if (registeredBoundary) {
+      console.log(
+        `ProjectCard "${title}": Successfully registered as physics boundary`
+      );
+    } else {
+      console.warn(
+        `ProjectCard "${title}": Failed to register physics boundary`
+      );
+    }
+  }
 </script>
 
 <div
@@ -89,9 +119,9 @@
     gap: 2%;
     margin-top: 5%;
   }
-  
+
   .tech-item {
     padding: 1% 3%;
-    background-color: rgba(0,0,0,0.05);
+    background-color: rgba(0, 0, 0, 0.05);
   }
 </style>

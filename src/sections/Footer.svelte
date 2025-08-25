@@ -1,14 +1,34 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, getContext } from 'svelte';
   
+  const physicsContext = getContext("physics");
+
   let footerElement;
-  
-  // Note: Footer typically won't be part of the physics simulation
-  // as mentioned in the architecture document, it sits below the canvas
-  
+  let registeredBoundary = null;
+  let hasMounted = false;
+
+  $: isReady = physicsContext?.isPhysicsReady;
+
   onMount(() => {
+    hasMounted = true;
     console.log('Footer section mounted');
   });
+
+  $: if (hasMounted && footerElement && $isReady && !registeredBoundary) {
+    console.log(
+      "footer: Physics is ready, attempting boundary registration..."
+    );
+
+    registeredBoundary = physicsContext.registerBoundary(
+      "footer", // unique ID
+      footerElement, // the DOM element to map
+      {
+        restitution: 0.8, // make it extra bouncy
+        friction: 0.2, // low friction for fun bounces
+        label: "footer", // debug label
+      }
+    );
+    }
 </script>
 
 <footer bind:this={footerElement} id="contact" class="footer-section">

@@ -12,15 +12,20 @@ export class PhysicsEngine {
     this.boundaries = [];
     this.balls = [];
 
-
     this.domBoundaries = []; // Track DOM-derived boundaries separately from viewport boundaries
     this.boundaryMappers = []; // Track all boundary mappers using this engine
 
     // Debug mode helps us see what's happening behind the scenes
     this.debugMode = true; // We'll make this configurable later
 
-    this.log = this.debugMode ? console.log : () => {};
-    
+    this.log = this.debugMode ? console.log : () => { };
+
+    // Scroll tracking for document-relative positioning
+    this.scrollX = 0;
+    this.scrollY = 0;
+    this.documentHeight = 0;
+    this.viewportHeight = 0;
+
     console.log('PhysicsEngine initialized');
   }
 
@@ -40,8 +45,8 @@ export class PhysicsEngine {
       // Create the runner - this is what keeps the physics updating
       this.runner = Matter.Runner.create();
 
-      // Create viewport boundaries now that we have a world
-      this.createViewportBoundaries();
+      // Set up scroll tracking
+      this.setupScrollTracking();
 
       // Create the initial ball
       this.createInitialBall();
@@ -136,6 +141,10 @@ export class PhysicsEngine {
         // Clear the entire canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+        // Apply scroll offset to canvas context for document-relative rendering
+        this.ctx.save();
+        this.ctx.translate(-this.scrollX, -this.scrollY);
+
         // Draw all the physics objects
         this.renderBalls();
 
@@ -144,6 +153,8 @@ export class PhysicsEngine {
           this.renderDebugBoundaries();
           this.renderDebugInfo();
         }
+
+        this.ctx.restore();
 
         // Schedule next frame
         this.renderLoopId = requestAnimationFrame(render);
@@ -206,65 +217,65 @@ export class PhysicsEngine {
     });
   }
 
- /**
- * Draw debug boundaries so we can see the invisible walls
- * Now handles both viewport and DOM boundaries with different colors
- */
-renderDebugBoundaries() {
-  this.ctx.save();
+  /**
+  * Draw debug boundaries so we can see the invisible walls
+  * Now handles both viewport and DOM boundaries with different colors
+  */
+  renderDebugBoundaries() {
+    this.ctx.save();
 
-  // Draw viewport boundaries (green, as before)
-  if (this.boundaries.length) {
-    this.ctx.strokeStyle = '#00ff00';
-    this.ctx.lineWidth = 2;
-    this.ctx.setLineDash([5, 5]);
+    // Draw viewport boundaries (green, as before)
+    if (this.boundaries.length) {
+      this.ctx.strokeStyle = '#00ff00';
+      this.ctx.lineWidth = 2;
+      this.ctx.setLineDash([5, 5]);
 
-    this.boundaries.forEach(boundary => {
-      this.drawBoundaryDebug(boundary, '#00ff00', 'viewport');
-    });
+      this.boundaries.forEach(boundary => {
+        this.drawBoundaryDebug(boundary, '#00ff00', 'viewport');
+      });
+    }
+
+    // Draw DOM boundaries (blue, to distinguish them)
+    if (this.domBoundaries.length) {
+      this.ctx.strokeStyle = '#0066ff';
+      this.ctx.lineWidth = 2;
+      this.ctx.setLineDash([3, 3]);
+
+      this.domBoundaries.forEach(boundaryInfo => {
+        this.drawBoundaryDebug(boundaryInfo.body, '#0066ff', 'DOM');
+      });
+    }
+
+    this.ctx.restore();
   }
 
-  // Draw DOM boundaries (blue, to distinguish them)
-  if (this.domBoundaries.length) {
-    this.ctx.strokeStyle = '#0066ff';
-    this.ctx.lineWidth = 2;
-    this.ctx.setLineDash([3, 3]);
+  /**
+   * Helper method to draw a single boundary
+   */
+  drawBoundaryDebug(boundary, color, type) {
+    const { x, y } = boundary.position;
+    const bounds = boundary.bounds;
+    const width = bounds.max.x - bounds.min.x;
+    const height = bounds.max.y - bounds.min.y;
 
-    this.domBoundaries.forEach(boundaryInfo => {
-      this.drawBoundaryDebug(boundaryInfo.body, '#0066ff', 'DOM');
-    });
+    // Draw boundary rectangle
+    this.ctx.strokeStyle = color;
+    this.ctx.strokeRect(
+      x - width / 2,
+      y - height / 2,
+      width,
+      height
+    );
+
+    // Label the boundary
+    this.ctx.fillStyle = color;
+    this.ctx.font = '12px monospace';
+    this.ctx.fillText(
+      `${type}: ${boundary.label || 'boundary'}`,
+      x - width / 2 + 5,
+      y - height / 2 + 15
+    );
   }
-
-  this.ctx.restore();
-}
-
-/**
- * Helper method to draw a single boundary
- */
-drawBoundaryDebug(boundary, color, type) {
-  const { x, y } = boundary.position;
-  const bounds = boundary.bounds;
-  const width = bounds.max.x - bounds.min.x;
-  const height = bounds.max.y - bounds.min.y;
-
-  // Draw boundary rectangle
-  this.ctx.strokeStyle = color;
-  this.ctx.strokeRect(
-    x - width / 2,
-    y - height / 2,
-    width,
-    height
-  );
-
-  // Label the boundary
-  this.ctx.fillStyle = color;
-  this.ctx.font = '12px monospace';
-  this.ctx.fillText(
-    `${type}: ${boundary.label || 'boundary'}`,
-    x - width / 2 + 5,
-    y - height / 2 + 15
-  );
-}
 
   /**
    * Display debug information on canvas
@@ -281,15 +292,19 @@ drawBoundaryDebug(boundary, color, type) {
       `Balls: ${this.balls.length}`,
       `Boundaries: ${this.boundaries.length}`,
       `DOM Boundaries: ${this.domBoundaries.length}`,
-      `Gravity: ${this.engine.world.gravity.y}`
+      `Gravity: ${this.engine.world.gravity.y}`,
+      `Scroll: (${this.scrollX}, ${this.scrollY})`,
+      `Doc Height: ${this.documentHeight}`
     ];
 
-    // Draw background for text
+    // Draw background for text - position relative to viewport, not document
     const padding = 10;
     const lineHeight = 18;
     const textWidth = 200;
     const textHeight = info.length * lineHeight + padding * 2;
 
+    // Reset transform for viewport-relative positioning of debug info
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     this.ctx.fillRect(10, 10, textWidth, textHeight);
 
@@ -497,7 +512,7 @@ drawBoundaryDebug(boundary, color, type) {
 
   /**
    * Create the initial ball above the launcher container
-   * Using fixed positioning for now as requested
+   * Using document-relative positioning
    */
   createInitialBall() {
     if (!this.canvas) {
@@ -508,17 +523,19 @@ drawBoundaryDebug(boundary, color, type) {
     // Calculate position above the launcher container
     // Launcher is at right: 0%, bottom: 2%, width: 10%
     const canvasWidth = this.canvas.width;
-    const canvasHeight = this.canvas.height;
+
+    // Use document height for positioning, not canvas height
+    const documentHeight = this.documentHeight || window.innerHeight;
 
     // Position the ball above where the launcher would be
-    const ballX = canvasWidth * 0.95; // 95% from left (near right edge)
-    const ballY = canvasHeight * 0.2;  // 20% from top (well above the launcher)
+    const ballX = canvasWidth * 0.88; // 95% from left (near right edge)
+    const ballY = documentHeight * 0.01;  // 20% from top of document (well above the launcher)
 
     // Create ball with 56px diameter (28px radius) - middle of your 48-64px range
     const ball = this.addBall(ballX, ballY, 28);
 
     if (ball) {
-      console.log('Initial ball created above launcher position');
+      console.log(`Initial ball created at document position (${ballX}, ${ballY})`);
     }
   }
 
@@ -526,49 +543,124 @@ drawBoundaryDebug(boundary, color, type) {
  * Register a DOM boundary with the physics engine
  * This is called by BoundaryMapper when elements register themselves
  */
-registerDomBoundary(physicsBody, metadata = {}) {
-  if (!physicsBody || !this.world) {
-    console.warn('PhysicsEngine: Cannot register DOM boundary - missing body or world');
-    return false;
+  registerDomBoundary(physicsBody, metadata = {}) {
+    if (!physicsBody || !this.world) {
+      console.warn('PhysicsEngine: Cannot register DOM boundary - missing body or world');
+      return false;
+    }
+
+    try {
+      // The body should already be added to the world by BoundaryMapper
+      // We just need to track it for debugging and cleanup
+      this.domBoundaries.push({
+        body: physicsBody,
+        type: 'dom-element',
+        ...metadata
+      });
+
+      this.log(`PhysicsEngine: DOM boundary registered: ${physicsBody.label}`);
+      return true;
+    } catch (error) {
+      console.error('PhysicsEngine: Failed to register DOM boundary:', error);
+      return false;
+    }
   }
 
-  try {
-    // The body should already be added to the world by BoundaryMapper
-    // We just need to track it for debugging and cleanup
-    this.domBoundaries.push({
-      body: physicsBody,
-      type: 'dom-element',
-      ...metadata
+  /**
+   * Remove a DOM boundary from tracking
+   * The BoundaryMapper handles removing from the physics world
+   */
+  unregisterDomBoundary(physicsBody) {
+    const index = this.domBoundaries.findIndex(boundary => boundary.body === physicsBody);
+    if (index !== -1) {
+      this.domBoundaries.splice(index, 1);
+      this.log(`PhysicsEngine: DOM boundary unregistered: ${physicsBody.label}`);
+    }
+  }
+
+  /**
+   * Register a BoundaryMapper instance with this engine
+   * This allows the engine to coordinate with multiple mappers
+   */
+  registerBoundaryMapper(boundaryMapper) {
+    if (!this.boundaryMappers.includes(boundaryMapper)) {
+      this.boundaryMappers.push(boundaryMapper);
+      this.log('PhysicsEngine: BoundaryMapper registered');
+    }
+  }
+
+  /**
+   * Set up scroll event listeners to track viewport position
+   */
+  setupScrollTracking() {
+    // Get initial scroll position and document height
+    this.updateScrollInfo();
+
+    // Listen for scroll events
+    window.addEventListener('scroll', () => {
+      this.updateScrollInfo();
+      this.updateBoundaryPositions();
     });
 
-    this.log(`PhysicsEngine: DOM boundary registered: ${physicsBody.label}`);
-    return true;
-  } catch (error) {
-    console.error('PhysicsEngine: Failed to register DOM boundary:', error);
-    return false;
-  }
-}
+    // Listen for resize events to update document height
+    window.addEventListener('resize', () => {
+      this.updateScrollInfo();
+      this.updateBoundaryPositions();
+    });
 
-/**
- * Remove a DOM boundary from tracking
- * The BoundaryMapper handles removing from the physics world
- */
-unregisterDomBoundary(physicsBody) {
-  const index = this.domBoundaries.findIndex(boundary => boundary.body === physicsBody);
-  if (index !== -1) {
-    this.domBoundaries.splice(index, 1);
-    this.log(`PhysicsEngine: DOM boundary unregistered: ${physicsBody.label}`);
+    console.log('Scroll tracking initialized');
   }
-}
 
-/**
- * Register a BoundaryMapper instance with this engine
- * This allows the engine to coordinate with multiple mappers
- */
-registerBoundaryMapper(boundaryMapper) {
-  if (!this.boundaryMappers.includes(boundaryMapper)) {
-    this.boundaryMappers.push(boundaryMapper);
-    this.log('PhysicsEngine: BoundaryMapper registered');
+  /**
+   * Update scroll position and document dimensions
+   */
+  updateScrollInfo() {
+    this.scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+    this.scrollY = window.pageYOffset || document.documentElement.scrollTop;
+    this.documentHeight = Math.max(
+      document.body.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.clientHeight,
+      document.documentElement.scrollHeight,
+      document.documentElement.offsetHeight
+    );
+    this.viewportHeight = window.innerHeight;
+
+    if (this.debugMode) {
+      console.log(`PhysicsEngine: Scroll: (${this.scrollX}, ${this.scrollY}), Doc height: ${this.documentHeight}, Viewport: ${this.viewportHeight}`);
+    }
   }
-}
+
+  /**
+   * Convert viewport coordinates to document coordinates
+   */
+  viewportToDocument(x, y) {
+    return {
+      x: x + this.scrollX,
+      y: y + this.scrollY
+    };
+  }
+
+  /**
+   * Convert document coordinates to viewport coordinates
+   */
+  documentToViewport(x, y) {
+    return {
+      x: x - this.scrollX,
+      y: y - this.scrollY
+    };
+  }
+
+  /**
+   * Update all DOM boundary positions based on current scroll
+   */
+  updateBoundaryPositions() {
+    if (!this.boundaryMappers.length) return;
+
+    this.boundaryMappers.forEach(mapper => {
+      if (mapper && typeof mapper.updateBoundaryPositions === 'function') {
+        mapper.updateBoundaryPositions(this.scrollX, this.scrollY);
+      }
+    });
+  }
 }

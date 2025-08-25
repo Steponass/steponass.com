@@ -1,47 +1,43 @@
 <script>
-  import { onMount, getContext } from 'svelte';
-  
+  import { onMount, getContext } from "svelte";
+
   // Get access to physics registration functions from PhysicsAwareSection
-  const physicsContext = getContext('physics');
-  
+  const physicsContext = getContext("physics");
+
   let headerElement;
   let signElement;
   let registeredBoundary = null;
   let hasMounted = false;
-  
+
   // Subscribe to the physics readiness store
   $: isReady = physicsContext?.isPhysicsReady;
-  
+
+  onMount(() => {
+    hasMounted = true;
+  });
+
   // Reactive statement - now listens to the store value
   $: if (hasMounted && signElement && $isReady && !registeredBoundary) {
-    console.log('Header: Physics is ready, attempting boundary registration...');
-    
+    console.log(
+      "Header: Physics is ready, attempting boundary registration..."
+    );
+
     registeredBoundary = physicsContext.registerBoundary(
-      'navigation-header', // unique ID
-      signElement,         // the DOM element to map
+      "navigation-header", // unique ID
+      signElement, // the DOM element to map
       {
-        restitution: 0.8,  // make it extra bouncy
-        friction: 0.2,     // low friction for fun bounces
-        label: 'nav-header' // debug label
+        restitution: 0.8, // make it extra bouncy
+        friction: 0.2, // low friction for fun bounces
+        label: "nav-header", // debug label
       }
     );
-    
+
     if (registeredBoundary) {
-      console.log('Header: Successfully registered as physics boundary');
+      console.log("Header: Successfully registered as physics boundary");
     } else {
-      console.warn('Header: Failed to register physics boundary');
+      console.warn("Header: Failed to register physics boundary");
     }
   }
-  
-  onMount(() => {
-    console.log('Header: Component mounted');
-    hasMounted = true;
-    
-    // Cleanup function
-    return () => {
-      console.log('Header: Component unmounting');
-    };
-  });
 </script>
 
 <header bind:this={headerElement} class="hanging-header">
@@ -49,15 +45,15 @@
     <div class="string left-string"></div>
     <div class="string right-string"></div>
   </div>
-  
+
   <!-- The actual sign that acts as a physics boundary -->
   <nav bind:this={signElement} class="sign-board">
-      <ul class="nav-links">
-        <li><a href="#projects">Projects</a></li>
-        <li><a href="#skills">Skills</a></li>
-        <li><a href="#contact">Contact</a></li>
-        <li><a href="#resume">Resume</a></li>
-      </ul>
+    <ul class="nav-links">
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#contact">Contact</a></li>
+      <li><a href="#resume">Resume</a></li>
+    </ul>
   </nav>
 </header>
 
@@ -72,7 +68,7 @@
     height: 120px; /* Space for strings + sign */
     pointer-events: none; /* Let clicks pass through empty space */
   }
-  
+
   .suspension-system {
     position: absolute;
     top: 0;
@@ -82,7 +78,7 @@
     height: 40px; /* Height of the string area */
     pointer-events: none; /* Strings don't block interactions */
   }
-  
+
   .string {
     position: absolute;
     top: 0;
@@ -95,15 +91,15 @@
     );
     transform-origin: top center;
   }
-  
+
   .left-string {
     left: 15%;
   }
-  
+
   .right-string {
     right: 15%;
   }
-  
+
   .sign-board {
     position: absolute;
     top: var(--space-24px); /* Hangs below the strings */
@@ -120,13 +116,13 @@
     position: relative;
     overflow: hidden;
   }
-  
+
   .nav-links {
     display: flex;
     list-style: none;
     gap: var(--space-16-24px);
   }
-  
+
   /* Disabling until we have physics set up 
   as there are notes that it might clash with matter.js */
 
@@ -137,11 +133,9 @@
     }
   } */
 
-
   /* @keyframes gentle-swing {
     0%, 100% { transform: translateX(-50%) rotate(0deg); }
     25% { transform: translateX(-50%) rotate(0.25deg); }
     75% { transform: translateX(-50%) rotate(-0.25deg); }
   } */
-  
 </style>

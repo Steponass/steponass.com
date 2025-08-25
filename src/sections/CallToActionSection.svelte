@@ -1,21 +1,75 @@
 <script>
-  import { onMount } from "svelte";
+  import { onMount, getContext } from "svelte";
 
-  // For future physics integration
-  export let registerBoundary = null;
+
+  const physicsContext = getContext("physics");
 
   let ctaElement;
   let titleElement;
-  let buttonElement;
+  let registeredTitleBoundary = null;
+  let registeredBoundary = null;
+  let hasMounted = false;
+
+  $: isReady = physicsContext?.isPhysicsReady;
 
   onMount(() => {
+    hasMounted = true;
     console.log("CTA section mounted");
-
-    // These elements will be registered as physics boundaries in later phases
-    if (registerBoundary) {
-      // Future physics registration code will go here
-    }
   });
+
+    // Register title element as physics boundary
+    $: if (hasMounted && titleElement && $isReady && !registeredTitleBoundary) {
+    console.log(
+      "CTASection: Physics is ready, attempting title boundary registration..."
+    );
+
+    registeredTitleBoundary = physicsContext.registerBoundary(
+      "CTA-title", // unique ID
+      titleElement, // the DOM element to map
+      {
+        restitution: 0.7, // moderately bouncy
+        friction: 0.4, // moderate friction
+        label: "CTA-title", // debug label
+      }
+    );
+
+    if (registeredTitleBoundary) {
+      console.log(
+        "CTASection: Title successfully registered as physics boundary"
+      );
+    } else {
+      console.warn(
+        "CTASection: Failed to register title physics boundary"
+      );
+    }
+  }
+  
+    // Register CTA DIV element as physics boundary
+    $: if (hasMounted && ctaElement && $isReady && !registeredBoundary) {
+    console.log(
+      "CTAelement: Physics is ready, attempting title boundary registration..."
+    );
+
+    registeredBoundary = physicsContext.registerBoundary(
+      "CTA-element", // unique ID
+      ctaElement, // the DOM element to map
+      {
+        restitution: 0.7, // moderately bouncy
+        friction: 0.4, // moderate friction
+        label: "CTA-element", // debug label
+      }
+    );
+
+    if (registeredBoundary) {
+      console.log(
+        "CTAelement: element successfully registered as physics boundary"
+      );
+    } else {
+      console.warn(
+        "CTAelement: Failed to register title physics boundary"
+      );
+    }
+  }
 
   function handleCtaClick() {
     // In the future, this could trigger a contact form or scroll to contact section
@@ -33,7 +87,6 @@
     <p>Buzz me, mellow.</p>
 
     <button
-      bind:this={buttonElement}
       class="cta-button"
       on:click={handleCtaClick}
     >

@@ -10,45 +10,37 @@ export class CanvasManager {
       debug: false,
       ...options
     };
-    
+
     // Cached dimensions to avoid unnecessary updates
     this.lastWidth = 0;
     this.lastHeight = 0;
-    
+
     // ResizeObserver and event listeners
     this.resizeObserver = null;
     this.eventCleanupFns = [];
-    
-    this.log = this.options.debug ? console.log : () => {};
+
+    this.log = this.options.debug ? console.log : () => { };
   }
 
   /**
-   * Calculate the optimal canvas height (viewport top to footer top)
+   * Calculate the optimal canvas height (full document height)
    */
   calculateCanvasHeight() {
-    const footer = document.querySelector(this.options.footerSelector);
-    
-    if (footer) {
-      const footerRect = footer.getBoundingClientRect();
-      const viewportHeight = window.innerHeight;
-      
-      // Ensure canvas height stays within viewport boundaries
-      const canvasHeight = Math.max(
-        0,
-        Math.min(viewportHeight, footerRect.top)
-      );
-      
-      this.log('CanvasManager - Footer found:', {
-        footerViewportTop: footerRect.top,
-        canvasHeight,
-        viewportHeight
-      });
-      
-      return canvasHeight;
-    } else {
-      this.log('CanvasManager - Footer not found, using viewport height');
-      return window.innerHeight;
-    }
+    // Use document height instead of viewport height for document-relative physics
+    const documentHeight = Math.max(
+      document.body.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.clientHeight,
+      document.documentElement.scrollHeight,
+      document.documentElement.offsetHeight
+    );
+
+    this.log('CanvasManager - Using document height:', {
+      documentHeight,
+      viewportHeight: window.innerHeight
+    });
+
+    return documentHeight;
   }
 
   /**
@@ -109,7 +101,7 @@ export class CanvasManager {
 
     // Observe document element (viewport changes) and footer (footer size changes)
     this.resizeObserver.observe(document.documentElement);
-    
+
     const footer = document.querySelector(this.options.footerSelector);
     if (footer) {
       this.resizeObserver.observe(footer);

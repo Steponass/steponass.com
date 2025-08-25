@@ -1,21 +1,48 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, getContext } from 'svelte';
   
   // Component props
   export let title = "Skill Title";
   export let description = "A brief description of this skill area.";
   
-  // For physics integration later
-  export let registerBoundary = null;
+  const physicsContext = getContext("physics");
   
   let skillElement;
+  let registeredBoundary = null;
+  let hasMounted = false;
   
+  $: isReady = physicsContext?.isPhysicsReady;
+
   onMount(() => {
-    // Will be used for physics boundary registration in later phase
-    if (skillElement && registerBoundary) {
-      // Future physics boundary registration will go here
-    }
+    hasMounted = true;
   });
+
+  // Register card element as physics boundary
+  $: if (hasMounted && skillElement && $isReady && !registeredBoundary) {
+    console.log(
+      `SkillCard "${title}": Physics is ready, attempting boundary registration...`
+    );
+
+    registeredBoundary = physicsContext.registerBoundary(
+      `skill-card-${title.toLowerCase().replace(/\s+/g, "-")}`, // unique ID based on title
+      skillElement, // the DOM element to map
+      {
+        restitution: 0.8, // moderately bouncy
+        friction: 0.2, // low friction for smooth interactions
+        label: `skill-card-${title}`, // debug label
+      }
+    );
+
+    if (registeredBoundary) {
+      console.log(
+        `SkillCard "${title}": Successfully registered as physics boundary`
+      );
+    } else {
+      console.warn(
+        `SkillCard "${title}": Failed to register physics boundary`
+      );
+    }
+  }
 </script>
 
 <div bind:this={skillElement} class="skill-item">
