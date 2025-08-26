@@ -11,6 +11,7 @@ export class PhysicsEngine {
     this.runner = null;
     this.boundaries = [];
     this.balls = [];
+    this.ballVisualStates = new Map();
 
 
     this.domBoundaries = []; // Track DOM-derived boundaries separately from viewport boundaries
@@ -164,53 +165,102 @@ this.setupCollisionEvents();
   }
 
 
+/**
+ * Draw all balls on the canvas with state-aware visual effects
+ */
+renderBalls() {
+  if (!this.balls.length) return;
 
-  /**
-   * Draw all balls on the canvas
-   */
-  renderBalls() {
-    if (!this.balls.length) return;
+  this.balls.forEach((ball, index) => {
+    const { x, y } = ball.position;
+    const radius = ball.circleRadius || 28;
+    const visualState = this.getBallVisualState(ball);
 
-    this.balls.forEach((ball, index) => {
-      const { x, y } = ball.position;
-      const radius = ball.circleRadius || 28;
+    this.ctx.save();
 
-      this.ctx.save();
+    // Apply visual effects based on the ball's current state
+    if (visualState === 'hovered') {
+      // Draw glow effect for hovered balls
+      this.renderBallGlow(x, y, radius);
+    }
 
-      // Main ball body
-      this.ctx.fillStyle = '#ff6b6b';
+    // Main ball body - color can vary by state
+    const ballColor = this.getBallColor(visualState);
+    this.ctx.fillStyle = ballColor;
+    this.ctx.beginPath();
+    this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Add a subtle highlight to make it look more 3D
+    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    this.ctx.beginPath();
+    this.ctx.arc(x - radius * 0.3, y - radius * 0.3, radius * 0.4, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Debug: show ball center and velocity vector if in debug mode
+    if (this.debugMode) {
+      // Mark center point
+      this.ctx.fillStyle = '#000';
       this.ctx.beginPath();
-      this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+      this.ctx.arc(x, y, 2, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Add a subtle highlight to make it look more 3D
-      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      // Show velocity as a line (helps debug movement)
+      const velocity = ball.velocity;
+      const scale = 5; // Scale factor to make velocity visible
+      this.ctx.strokeStyle = '#0066ff';
+      this.ctx.lineWidth = 2;
       this.ctx.beginPath();
-      this.ctx.arc(x - radius * 0.3, y - radius * 0.3, radius * 0.4, 0, Math.PI * 2);
-      this.ctx.fill();
+      this.ctx.moveTo(x, y);
+      this.ctx.lineTo(x + velocity.x * scale, y + velocity.y * scale);
+      this.ctx.stroke();
+      
+      // Show visual state as text
+      this.ctx.fillStyle = '#000';
+      this.ctx.font = '12px monospace';
+      this.ctx.fillText(visualState, x + radius + 5, y);
+    }
 
-      // Debug: show ball center and velocity vector if in debug mode
-      if (this.debugMode) {
-        // Mark center point
-        this.ctx.fillStyle = '#000';
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, 2, 0, Math.PI * 2);
-        this.ctx.fill();
+    this.ctx.restore();
+  });
+}
 
-        // Show velocity as a line (helps debug movement)
-        const velocity = ball.velocity;
-        const scale = 5; // Scale factor to make velocity visible
-        this.ctx.strokeStyle = '#0066ff';
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, y);
-        this.ctx.lineTo(x + velocity.x * scale, y + velocity.y * scale);
-        this.ctx.stroke();
-      }
+/**
+ * Render a glow effect around a ball
+ * This creates the visual feedback that indicates a ball can be interacted with
+ */
+renderBallGlow(centerX, centerY, radius) {
+  const glowRadius = radius + 15; // Glow extends beyond the ball
+  const gradient = this.ctx.createRadialGradient(
+    centerX, centerY, radius,           // Inner circle (ball edge)
+    centerX, centerY, glowRadius        // Outer circle (glow edge)
+  );
+  
+  // Create a gradient that fades from semi-transparent to fully transparent
+  gradient.addColorStop(0, 'rgba(255, 107, 107, 0.3)'); // Semi-transparent red at ball edge
+  gradient.addColorStop(0.7, 'rgba(255, 107, 107, 0.1)'); // Lighter red in middle of glow
+  gradient.addColorStop(1, 'rgba(255, 107, 107, 0)');     // Fully transparent at glow edge
+  
+  this.ctx.fillStyle = gradient;
+  this.ctx.beginPath();
+  this.ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
+  this.ctx.fill();
+}
 
-      this.ctx.restore();
-    });
+/**
+ * Get the appropriate color for a ball based on its visual state
+ * This allows different states to have different colors if desired
+ */
+getBallColor(visualState) {
+  switch (visualState) {
+    case 'hovered':
+      return '#ff5252'; // Slightly different red when hovered
+    case 'dragged':
+      return '#ff3030'; // Even more intense red when being dragged
+    default:
+      return '#ff6b6b'; // Default red color
   }
+}
 
   /**
   * Draw debug boundaries so we can see the invisible walls
@@ -729,6 +779,41 @@ calculateImpactForce(collision, ball) {
     }
   }
 
+/**
+ * Set the visual state for a specific ball
+ * This allows external systems (like hover detection) to influence how balls are rendered
+ * @param {Object} ball - The Matter.js ball object
+ * @param {string} state - The visual state ('normal', 'hovered', 'dragged')
+ */
+setBallVisualState(ball, state) {
+  if (!ball) {
+    console.warn('PhysicsEngine: Cannot set visual state for null/undefined ball');
+    return;
+  }
+  
+  this.ballVisualStates.set(ball, state);
+  this.log(`PhysicsEngine: Ball visual state set to "${state}"`);
+}
+
+/**
+ * Get the current visual state for a specific ball
+ * @param {Object} ball - The Matter.js ball object
+ * @returns {string} - The visual state ('normal' is default)
+ */
+getBallVisualState(ball) {
+  return this.ballVisualStates.get(ball) || 'normal';
+}
+
+/**
+ * Clear visual state for a specific ball (returns it to normal)
+ * @param {Object} ball - The Matter.js ball object
+ */
+clearBallVisualState(ball) {
+  this.ballVisualStates.delete(ball);
+  this.log('PhysicsEngine: Ball visual state cleared (returned to normal)');
+}
+
+
   /**
  * Register a DOM boundary with the physics engine
  * This is called by BoundaryMapper when elements register themselves
@@ -807,4 +892,6 @@ calculateImpactForce(collision, ball) {
       }
     });
   }
+
+  
 }

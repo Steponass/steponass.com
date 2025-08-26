@@ -3,6 +3,8 @@
   import { CanvasManager } from "@physics/CanvasManager.js";
   import { PhysicsEngine } from "@physics/PhysicsEngine.js";
   import { BallHoverDetection } from "@lib/services/BallHoverDetection.js";
+  // Updated import path for consistency with your other @lib imports
+  import { BallDragManager } from "@lib/services/BallDragManager.js";
   import { canvasPointerEvents, enableBallInteraction, enableNormalBrowsing } from "@stores/interaction.js";
   import { physicsEngine, physicsEnabled } from "@stores/physics.js";
 
@@ -10,10 +12,12 @@
   export let debug = false;
   export let enabled = true;
 
+  // Component state variables - organized by system responsibility
   let canvasElement;
   let canvasManager;
   let engine;
   let hoverDetection;
+  let dragManager; // Your existing addition - perfect placement
 
   onMount(() => {
     console.log("PhysicsCanvas: Starting initialization...");
@@ -34,19 +38,28 @@
     }, 100);
 
     // Cleanup function - Svelte will call this when component unmounts
+    // UPDATED: Added drag manager cleanup in the correct dependency order
     return () => {
       console.log("PhysicsCanvas: Cleaning up...");
 
-        // Clean up hover detection first (it depends on physics engine)
-  if (hoverDetection) {
-    hoverDetection.stop();
-    hoverDetection = null;
-  }
+      // Clean up drag manager first (it depends on physics engine)
+      if (dragManager) {
+        dragManager.stop();
+        dragManager = null;
+      }
 
+      // Clean up hover detection next (it also depends on physics engine)
+      if (hoverDetection) {
+        hoverDetection.stop();
+        hoverDetection = null;
+      }
+
+      // Clean up physics engine after dependent systems are stopped
       if (engine) {
         engine.cleanup();
       }
 
+      // Clean up canvas manager last (lowest level dependency)
       if (canvasManager) {
         canvasManager.stopWatching();
       }
@@ -55,6 +68,7 @@
 
   /**
    * Initialize the physics engine after canvas is ready
+   * This function orchestrates the initialization of all physics-related systems
    */
   function initializePhysics() {
     if (!canvasElement) {
@@ -94,8 +108,13 @@
         // Set up canvas resize handler for physics
         setupPhysicsResizeHandler();
 
-      // Initialize hover detection after physics is ready
-      initializeHoverDetection();
+        // Initialize interaction systems in dependency order
+        // Hover detection first (foundational interaction layer)
+        initializeHoverDetection();
+
+        // Drag management second (builds upon hover detection concepts)
+        initializeDragManager();
+
       } else {
         console.error("PhysicsCanvas: Failed to initialize physics engine");
       }
@@ -107,58 +126,87 @@
     }
   }
 
-/**
- * Initialize the hover detection service after physics engine is ready
- * This creates the bridge between mouse events and automatic interaction mode switching
- */
- function initializeHoverDetection() {
-  if (!engine) {
-    console.warn("PhysicsCanvas: Cannot initialize hover detection without physics engine");
-    return;
+  /**
+   * Initialize the hover detection service after physics engine is ready
+   * This creates the bridge between mouse events and automatic interaction mode switching
+   */
+  function initializeHoverDetection() {
+    if (!engine) {
+      console.warn("PhysicsCanvas: Cannot initialize hover detection without physics engine");
+      return;
+    }
+    
+    try {
+      // Create the interaction store interface that our service needs
+      const interactionInterface = {
+        enableBallInteraction,
+        enableNormalBrowsing
+      };
+      
+      // Create the hover detection service
+      hoverDetection = new BallHoverDetection(engine, interactionInterface);
+      
+      // Start the hover detection system
+      hoverDetection.start();
+      
+      console.log("PhysicsCanvas: Hover detection initialized and started");
+    } catch (error) {
+      console.error("PhysicsCanvas: Failed to initialize hover detection:", error);
+    }
   }
-  
-  try {
-    // Create the interaction store interface that our service needs
-    const interactionInterface = {
-      enableBallInteraction,
-      enableNormalBrowsing
-    };
+
+  /**
+   * Initialize the ball drag manager after physics engine is ready
+   * NEW FUNCTION: This was missing from your current implementation
+   */
+  function initializeDragManager() {
+    if (!engine || !canvasElement) {
+      console.warn("PhysicsCanvas: Cannot initialize drag manager without engine and canvas");
+      return;
+    }
     
-    // Create the hover detection service
-    hoverDetection = new BallHoverDetection(engine, interactionInterface);
-    
-    // Start the hover detection system
-    hoverDetection.start();
-    
-    console.log("PhysicsCanvas: Hover detection initialized and started");
-  } catch (error) {
-    console.error("PhysicsCanvas: Failed to initialize hover detection:", error);
+    try {
+      // Create the drag manager with references to physics engine and canvas
+      dragManager = new BallDragManager(engine, canvasElement);
+      
+      // Start the drag manager service
+      const success = dragManager.start();
+      
+      if (success) {
+        console.log("PhysicsCanvas: Drag manager initialized successfully");
+      } else {
+        console.error("PhysicsCanvas: Drag manager failed to start");
+      }
+    } catch (error) {
+      console.error("PhysicsCanvas: Error initializing drag manager:", error);
+    }
   }
-}
 
   /**
    * Handle canvas size changes and update physics accordingly
+   * This ensures all physics systems remain synchronized when the canvas resizes
    */
-   function setupPhysicsResizeHandler() {
-  if (!canvasManager || !engine) return;
+  function setupPhysicsResizeHandler() {
+    if (!canvasManager || !engine) return;
 
-  // Store original canvas update method
-  const originalUpdate = canvasManager.updateCanvasSize.bind(canvasManager);
+    // Store original canvas update method
+    const originalUpdate = canvasManager.updateCanvasSize.bind(canvasManager);
 
-  // Override with physics-aware version
-  canvasManager.updateCanvasSize = function () {
-    const sizeChanged = originalUpdate();
+    // Override with physics-aware version
+    canvasManager.updateCanvasSize = function () {
+      const sizeChanged = originalUpdate();
 
-    if (sizeChanged && engine) {
-      console.log('PhysicsCanvas: Canvas size changed, updating physics boundaries');
-      engine.updateBoundaries();
-    }
+      if (sizeChanged && engine) {
+        console.log('PhysicsCanvas: Canvas size changed, updating physics boundaries');
+        engine.updateBoundaries();
+      }
 
-    return sizeChanged;
-  };
-}
+      return sizeChanged;
+    };
+  }
 
   // Reactive statement - updates when enabled prop changes
+  // This ensures the physics system can be dynamically enabled/disabled
   $: if (engine) {
     if (enabled) {
       console.log("PhysicsCanvas: Physics enabled");

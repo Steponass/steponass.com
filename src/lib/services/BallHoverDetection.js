@@ -170,43 +170,79 @@ export class BallHoverDetection {
     return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
   }
   
-  /**
-   * Enter hover state - we just started hovering over a ball
-   */
-  enterHoverState(ball) {
-    console.log('BallHoverDetection: Entering hover state for ball');
-    
-    this.currentHoveredBall = ball;
-    
-    // Switch to ball interaction mode
-    // We'll use the existing interaction store functions
-    this.interactionStore.enableBallInteraction();
-    
-    // TODO: Add visual feedback (glow effect) in the next step
+/**
+ * Enter hover state - we just started hovering over a ball
+ * This method now handles both interaction mode switching AND visual feedback
+ */
+enterHoverState(ball) {
+  console.log('BallHoverDetection: Entering hover state for ball');
+  
+  this.currentHoveredBall = ball;
+  
+  // Switch to ball interaction mode
+  this.interactionStore.enableBallInteraction();
+  
+  // NEW: Apply visual feedback to the hovered ball
+  if (this.physicsEngine && typeof this.physicsEngine.setBallVisualState === 'function') {
+    this.physicsEngine.setBallVisualState(ball, 'hovered');
+  } else {
+    console.warn('BallHoverDetection: Cannot set visual state - physics engine method not available');
   }
   
-  /**
-   * Exit hover state - mouse moved away from all balls
-   */
-  exitHoverState() {
-    console.log('BallHoverDetection: Exiting hover state');
-    
-    this.currentHoveredBall = null;
-    
-    // Switch back to normal browsing mode
-    this.interactionStore.enableNormalBrowsing();
-    
-    // TODO: Remove visual feedback in the next step
+  // Set cursor to pointer to indicate interactivity
+  this.setCursorStyle('pointer');
+}
+
+/**
+ * Exit hover state - mouse moved away from all balls
+ * This method handles cleanup of both interaction mode and visual effects
+ */
+exitHoverState() {
+  console.log('BallHoverDetection: Exiting hover state');
+  
+  // Clear visual state for the previously hovered ball
+  if (this.currentHoveredBall && this.physicsEngine && typeof this.physicsEngine.clearBallVisualState === 'function') {
+    this.physicsEngine.clearBallVisualState(this.currentHoveredBall);
   }
   
-  /**
-   * Switch from hovering one ball to hovering a different ball
-   */
-  switchHoveredBall(newBall) {
-    console.log('BallHoverDetection: Switching hovered ball');
-    
-    // For now, we just update which ball is being hovered
-    // In the future, we might want different visual feedback per ball
-    this.currentHoveredBall = newBall;
+  this.currentHoveredBall = null;
+  
+  // Switch back to normal browsing mode
+  this.interactionStore.enableNormalBrowsing();
+  
+  // Reset cursor to default
+  this.setCursorStyle('default');
+}
+
+/**
+ * Switch from hovering one ball to hovering a different ball
+ * This method handles the transition between different hovered balls
+ */
+switchHoveredBall(newBall) {
+  console.log('BallHoverDetection: Switching hovered ball');
+  
+  // Clear visual state from the previously hovered ball
+  if (this.currentHoveredBall && this.physicsEngine && typeof this.physicsEngine.clearBallVisualState === 'function') {
+    this.physicsEngine.clearBallVisualState(this.currentHoveredBall);
   }
+  
+  // Update which ball is being hovered
+  this.currentHoveredBall = newBall;
+  
+  // Apply visual state to the newly hovered ball
+  if (this.physicsEngine && typeof this.physicsEngine.setBallVisualState === 'function') {
+    this.physicsEngine.setBallVisualState(newBall, 'hovered');
+  }
+}
+
+/**
+ * Set the cursor style for the entire document
+ * This provides additional visual feedback about the current interaction state
+ * @param {string} style - CSS cursor value ('default', 'pointer', 'grab', etc.)
+ */
+setCursorStyle(style) {
+  // We apply cursor changes to the document body so they're visible everywhere
+  // This is more reliable than trying to coordinate cursor changes across multiple elements
+  document.body.style.cursor = style;
+}
 }
