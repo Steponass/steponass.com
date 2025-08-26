@@ -32,7 +32,23 @@ export class PhysicsEngine {
   init() {
     try {
       // Create the physics engine - this calculates all interactions
-      this.engine = Matter.Engine.create();
+      this.engine = Matter.Engine.create({
+        // Anti-tunneling settings - prevent fast objects from passing through boundaries
+        positionIterations: 6,    // Default: 6. Higher = better collision detection, lower performance
+        velocityIterations: 4,     // Default: 4. Higher = more accurate velocity calculations
+        constraintIterations: 2,   // Default: 2. Affects constraint solving accuracy
+        
+        // Performance and stability settings
+        enableSleeping: true,      // Allow inactive bodies to "sleep" for better performance
+        
+        // Timing configuration for consistent simulation
+        timing: {
+          timeScale: 1.0,          // Normal speed simulation
+          timestamp: 0             // Starting timestamp
+        }
+      });
+
+
       this.world = this.engine.world;
 
       // Set gravity - gravity.y of 1 is Earth-like gravity
@@ -40,13 +56,18 @@ export class PhysicsEngine {
       this.engine.gravity.x = 0;
 
       // Create the runner - this is what keeps the physics updating
-      this.runner = Matter.Runner.create();
+      this.runner = Matter.Runner.create({
+        // Sub-stepping configuration for anti-tunneling
+        delta: 1000 / 120,        // Target 120Hz physics updates (8.33ms per step)
+        isFixed: true,            // Use fixed timestep for consistent physics
+        enabled: true             // Enable the runner by default
+      });
 
       // Create boundaries around the canvas edges
       this.createViewportBoundaries();
 
-// Set up collision event listening for reactive boundaries
-this.setupCollisionEvents();
+      // Set up collision event listening for reactive boundaries
+      this.setupCollisionEvents();
 
       // Create the initial ball
       this.createInitialBall();
@@ -165,102 +186,102 @@ this.setupCollisionEvents();
   }
 
 
-/**
- * Draw all balls on the canvas with state-aware visual effects
- */
-renderBalls() {
-  if (!this.balls.length) return;
+  /**
+   * Draw all balls on the canvas with state-aware visual effects
+   */
+  renderBalls() {
+    if (!this.balls.length) return;
 
-  this.balls.forEach((ball, index) => {
-    const { x, y } = ball.position;
-    const radius = ball.circleRadius || 28;
-    const visualState = this.getBallVisualState(ball);
+    this.balls.forEach((ball, index) => {
+      const { x, y } = ball.position;
+      const radius = ball.circleRadius || 28;
+      const visualState = this.getBallVisualState(ball);
 
-    this.ctx.save();
+      this.ctx.save();
 
-    // Apply visual effects based on the ball's current state
-    if (visualState === 'hovered') {
-      // Draw glow effect for hovered balls
-      this.renderBallGlow(x, y, radius);
-    }
+      // Apply visual effects based on the ball's current state
+      if (visualState === 'hovered') {
+        // Draw glow effect for hovered balls
+        this.renderBallGlow(x, y, radius);
+      }
 
-    // Main ball body - color can vary by state
-    const ballColor = this.getBallColor(visualState);
-    this.ctx.fillStyle = ballColor;
-    this.ctx.beginPath();
-    this.ctx.arc(x, y, radius, 0, Math.PI * 2);
-    this.ctx.fill();
-
-    // Add a subtle highlight to make it look more 3D
-    this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-    this.ctx.beginPath();
-    this.ctx.arc(x - radius * 0.3, y - radius * 0.3, radius * 0.4, 0, Math.PI * 2);
-    this.ctx.fill();
-
-    // Debug: show ball center and velocity vector if in debug mode
-    if (this.debugMode) {
-      // Mark center point
-      this.ctx.fillStyle = '#000';
+      // Main ball body - color can vary by state
+      const ballColor = this.getBallColor(visualState);
+      this.ctx.fillStyle = ballColor;
       this.ctx.beginPath();
-      this.ctx.arc(x, y, 2, 0, Math.PI * 2);
+      this.ctx.arc(x, y, radius, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Show velocity as a line (helps debug movement)
-      const velocity = ball.velocity;
-      const scale = 5; // Scale factor to make velocity visible
-      this.ctx.strokeStyle = '#0066ff';
-      this.ctx.lineWidth = 2;
+      // Add a subtle highlight to make it look more 3D
+      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
       this.ctx.beginPath();
-      this.ctx.moveTo(x, y);
-      this.ctx.lineTo(x + velocity.x * scale, y + velocity.y * scale);
-      this.ctx.stroke();
-      
-      // Show visual state as text
-      this.ctx.fillStyle = '#000';
-      this.ctx.font = '12px monospace';
-      this.ctx.fillText(visualState, x + radius + 5, y);
-    }
+      this.ctx.arc(x - radius * 0.3, y - radius * 0.3, radius * 0.4, 0, Math.PI * 2);
+      this.ctx.fill();
 
-    this.ctx.restore();
-  });
-}
+      // Debug: show ball center and velocity vector if in debug mode
+      if (this.debugMode) {
+        // Mark center point
+        this.ctx.fillStyle = '#000';
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, 2, 0, Math.PI * 2);
+        this.ctx.fill();
 
-/**
- * Render a glow effect around a ball
- * This creates the visual feedback that indicates a ball can be interacted with
- */
-renderBallGlow(centerX, centerY, radius) {
-  const glowRadius = radius + 15; // Glow extends beyond the ball
-  const gradient = this.ctx.createRadialGradient(
-    centerX, centerY, radius,           // Inner circle (ball edge)
-    centerX, centerY, glowRadius        // Outer circle (glow edge)
-  );
-  
-  // Create a gradient that fades from semi-transparent to fully transparent
-  gradient.addColorStop(0, 'rgba(255, 107, 107, 0.3)'); // Semi-transparent red at ball edge
-  gradient.addColorStop(0.7, 'rgba(255, 107, 107, 0.1)'); // Lighter red in middle of glow
-  gradient.addColorStop(1, 'rgba(255, 107, 107, 0)');     // Fully transparent at glow edge
-  
-  this.ctx.fillStyle = gradient;
-  this.ctx.beginPath();
-  this.ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
-  this.ctx.fill();
-}
+        // Show velocity as a line (helps debug movement)
+        const velocity = ball.velocity;
+        const scale = 5; // Scale factor to make velocity visible
+        this.ctx.strokeStyle = '#0066ff';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y);
+        this.ctx.lineTo(x + velocity.x * scale, y + velocity.y * scale);
+        this.ctx.stroke();
 
-/**
- * Get the appropriate color for a ball based on its visual state
- * This allows different states to have different colors if desired
- */
-getBallColor(visualState) {
-  switch (visualState) {
-    case 'hovered':
-      return '#ff5252'; // Slightly different red when hovered
-    case 'dragged':
-      return '#ff3030'; // Even more intense red when being dragged
-    default:
-      return '#ff6b6b'; // Default red color
+        // Show visual state as text
+        this.ctx.fillStyle = '#000';
+        this.ctx.font = '12px monospace';
+        this.ctx.fillText(visualState, x + radius + 5, y);
+      }
+
+      this.ctx.restore();
+    });
   }
-}
+
+  /**
+   * Render a glow effect around a ball
+   * This creates the visual feedback that indicates a ball can be interacted with
+   */
+  renderBallGlow(centerX, centerY, radius) {
+    const glowRadius = radius + 15; // Glow extends beyond the ball
+    const gradient = this.ctx.createRadialGradient(
+      centerX, centerY, radius,           // Inner circle (ball edge)
+      centerX, centerY, glowRadius        // Outer circle (glow edge)
+    );
+
+    // Create a gradient that fades from semi-transparent to fully transparent
+    gradient.addColorStop(0, 'rgba(255, 107, 107, 0.3)'); // Semi-transparent red at ball edge
+    gradient.addColorStop(0.7, 'rgba(255, 107, 107, 0.1)'); // Lighter red in middle of glow
+    gradient.addColorStop(1, 'rgba(255, 107, 107, 0)');     // Fully transparent at glow edge
+
+    this.ctx.fillStyle = gradient;
+    this.ctx.beginPath();
+    this.ctx.arc(centerX, centerY, glowRadius, 0, Math.PI * 2);
+    this.ctx.fill();
+  }
+
+  /**
+   * Get the appropriate color for a ball based on its visual state
+   * This allows different states to have different colors if desired
+   */
+  getBallColor(visualState) {
+    switch (visualState) {
+      case 'hovered':
+        return '#ff5252'; // Slightly different red when hovered
+      case 'dragged':
+        return '#ff3030'; // Even more intense red when being dragged
+      default:
+        return '#ff6b6b'; // Default red color
+    }
+  }
 
   /**
   * Draw debug boundaries so we can see the invisible walls
@@ -369,27 +390,27 @@ getBallColor(visualState) {
       console.error('Canvas or world not available for boundary creation');
       return;
     }
-  
+
     this.clearBoundaries();
-  
+
     const width = this.canvas.width;
     const height = this.canvas.height;
-    const thickness = 25;
+    const thickness = 150; // Increased thickness
 
     const boundaries = [
-      // Floor - bottom boundary  
+      // Floor - bottom boundary (extends outward)
       this.createBoundary(width / 2, height + thickness / 2, width, thickness, 'floor'),
-      
-      // Ceiling - top boundary
+
+      // Ceiling - top boundary (extends outward)
       this.createBoundary(width / 2, -thickness / 2, width, thickness, 'ceiling'),
-      
-      // Left wall - positioned inside the left edge of canvas
-      this.createBoundary(thickness / 25, height / 2, thickness, height, 'left-wall'),
-      
-      // Right wall - positioned inside the right edge of canvas  
-      this.createBoundary(width - thickness / 25, height / 2, thickness, height, 'right-wall')
+
+      // Left wall - positioned outside the left edge of canvas (extends outward)
+      this.createBoundary(-thickness / 2, height / 2, thickness, height, 'left-wall'),
+
+      // Right wall - positioned outside the right edge of canvas (extends outward)
+      this.createBoundary(width + thickness / 2, height / 2, thickness, height, 'right-wall')
     ];
-  
+
     // Add all boundaries to the physics world
     boundaries.forEach(boundary => {
       if (boundary) {
@@ -397,7 +418,7 @@ getBallColor(visualState) {
         this.boundaries.push(boundary);
       }
     });
-  
+
     console.log(`Created ${boundaries.length} canvas boundaries for ${width}x${height} area`);
     console.log('Boundary positions:');
     boundaries.forEach((boundary, i) => {
@@ -407,188 +428,188 @@ getBallColor(visualState) {
     });
   }
 
-/**
- * Set up collision event listeners for reactive boundary feedback
- * This is the "security camera notification system" for physics interactions
- */
-setupCollisionEvents() {
-  if (!this.engine) {
-    console.warn('PhysicsEngine: Cannot setup collision events without engine');
-    return;
+  /**
+   * Set up collision event listeners for reactive boundary feedback
+   * This is the "security camera notification system" for physics interactions
+   */
+  setupCollisionEvents() {
+    if (!this.engine) {
+      console.warn('PhysicsEngine: Cannot setup collision events without engine');
+      return;
+    }
+
+    // Matter.js provides several collision events, but we want 'collisionStart'
+    // This fires once when objects first make contact (not continuously while touching)
+    Matter.Events.on(this.engine, 'collisionStart', (event) => {
+      this.handleCollisionStart(event);
+    });
+
+    this.log('PhysicsEngine: Collision event listeners established');
   }
 
-  // Matter.js provides several collision events, but we want 'collisionStart'
-  // This fires once when objects first make contact (not continuously while touching)
-  Matter.Events.on(this.engine, 'collisionStart', (event) => {
-    this.handleCollisionStart(event);
-  });
 
-  this.log('PhysicsEngine: Collision event listeners established');
-}
+  /**
+   * Handle collision start events - this is our "detective work" method
+   * Examines each collision to determine if visual feedback should trigger
+   * @param {Object} event - Matter.js collision event containing pairs of colliding objects
+   */
+  handleCollisionStart(event) {
+    // Matter.js gives us an array of collision pairs
+    // Each pair represents two objects that just started touching
+    const pairs = event.pairs;
 
+    pairs.forEach(pair => {
+      // Extract the two objects involved in this collision
+      const { bodyA, bodyB, collision } = pair;
 
-/**
- * Handle collision start events - this is our "detective work" method
- * Examines each collision to determine if visual feedback should trigger
- * @param {Object} event - Matter.js collision event containing pairs of colliding objects
- */
-handleCollisionStart(event) {
-  // Matter.js gives us an array of collision pairs
-  // Each pair represents two objects that just started touching
-  const pairs = event.pairs;
+      // Step 1: Identify which object is the ball and which is the boundary
+      // We need to check both directions since we don't know the order
+      let ball = null;
+      let boundary = null;
 
-  pairs.forEach(pair => {
-    // Extract the two objects involved in this collision
-    const { bodyA, bodyB, collision } = pair;
+      if (this.isBall(bodyA) && this.isBoundary(bodyB)) {
+        ball = bodyA;
+        boundary = bodyB;
+      } else if (this.isBall(bodyB) && this.isBoundary(bodyA)) {
+        ball = bodyB;
+        boundary = bodyA;
+      } else {
+        // This collision doesn't involve a ball hitting a boundary
+        // Could be ball-to-ball, boundary-to-boundary, or ball-to-viewport-wall
+        return; // Skip this collision
+      }
 
-    // Step 1: Identify which object is the ball and which is the boundary
-    // We need to check both directions since we don't know the order
-    let ball = null;
-    let boundary = null;
+      // Step 2: Check if this boundary is reactive
+      const boundaryInfo = this.getBoundaryInfo(boundary);
+      if (!boundaryInfo || boundaryInfo.boundaryType !== 'reactive') {
+        return; // Static boundary - no visual feedback needed
+      }
 
-    if (this.isBall(bodyA) && this.isBoundary(bodyB)) {
-      ball = bodyA;
-      boundary = bodyB;
-    } else if (this.isBall(bodyB) && this.isBoundary(bodyA)) {
-      ball = bodyB;
-      boundary = bodyA;
-    } else {
-      // This collision doesn't involve a ball hitting a boundary
-      // Could be ball-to-ball, boundary-to-boundary, or ball-to-viewport-wall
-      return; // Skip this collision
-    }
+      // Step 3: Calculate impact force and check threshold
+      const impactForce = this.calculateImpactForce(collision, ball);
+      if (impactForce < boundaryInfo.reactionConfig.velocityThreshold) {
+        return; // Impact too gentle - no reaction needed
+      }
 
-    // Step 2: Check if this boundary is reactive
-    const boundaryInfo = this.getBoundaryInfo(boundary);
-    if (!boundaryInfo || boundaryInfo.boundaryType !== 'reactive') {
-      return; // Static boundary - no visual feedback needed
-    }
-
-    // Step 3: Calculate impact force and check threshold
-    const impactForce = this.calculateImpactForce(collision, ball);
-    if (impactForce < boundaryInfo.reactionConfig.velocityThreshold) {
-      return; // Impact too gentle - no reaction needed
-    }
-
-    // All conditions met! Trigger visual feedback
-    this.triggerBoundaryReaction(boundaryInfo, impactForce);
-  });
-}
-
-/**
- * Trigger visual reaction for a boundary that was hit by a ball
- * This bridges the physics world back to DOM visual effects
- * @param {Object} boundaryInfo - The boundary data including DOM element and reaction config
- * @param {number} impactForce - The calculated impact force for potential effect scaling
- */
-triggerBoundaryReaction(boundaryInfo, impactForce) {
-  const { element, reactionConfig } = boundaryInfo;
-  
-  if (!element || !reactionConfig) {
-    this.log('PhysicsEngine: Cannot trigger reaction - missing element or config');
-    return;
+      // All conditions met! Trigger visual feedback
+      this.triggerBoundaryReaction(boundaryInfo, impactForce);
+    });
   }
 
-  // Apply visual effects using CSS custom properties
-  // This is the "lighting up" moment when physics meets visual design
-  this.applyReactionEffects(element, reactionConfig, impactForce);
+  /**
+   * Trigger visual reaction for a boundary that was hit by a ball
+   * This bridges the physics world back to DOM visual effects
+   * @param {Object} boundaryInfo - The boundary data including DOM element and reaction config
+   * @param {number} impactForce - The calculated impact force for potential effect scaling
+   */
+  triggerBoundaryReaction(boundaryInfo, impactForce) {
+    const { element, reactionConfig } = boundaryInfo;
 
-  this.log(`PhysicsEngine: Triggered reaction for ${boundaryInfo.physicsBody.label} with force ${impactForce.toFixed(2)}`);
-}
+    if (!element || !reactionConfig) {
+      this.log('PhysicsEngine: Cannot trigger reaction - missing element or config');
+      return;
+    }
 
-/**
- * Apply the actual visual effects to a DOM element
- * Uses CSS custom properties for smooth, hardware-accelerated animations
- * @param {HTMLElement} element - The DOM element to animate
- * @param {Object} reactionConfig - Animation configuration with scale, brightness, etc.
- * @param {number} impactForce - Force magnitude (could be used for effect intensity)
- */
-applyReactionEffects(element, reactionConfig, impactForce) {
-  const { scale, brightness, saturation, duration } = reactionConfig;
+    // Apply visual effects using CSS custom properties
+    // This is the "lighting up" moment when physics meets visual design
+    this.applyReactionEffects(element, reactionConfig, impactForce);
 
-  // Store the original state so we can restore it later
-  const originalTransform = element.style.transform || '';
-  const originalFilter = element.style.filter || '';
+    this.log(`PhysicsEngine: Triggered reaction for ${boundaryInfo.physicsBody.label} with force ${impactForce.toFixed(2)}`);
+  }
 
-  // Apply the reaction effects immediately
-  element.style.transform = `${originalTransform} scale(${scale.to})`;
-  element.style.filter = `brightness(${brightness.to}) saturate(${saturation.to})`;
-  
-  // Set up the return animation using CSS transitions
-  element.style.transition = `transform ${duration}ms ease-out, filter ${duration}ms ease-out`;
+  /**
+   * Apply the actual visual effects to a DOM element
+   * Uses CSS custom properties for smooth, hardware-accelerated animations
+   * @param {HTMLElement} element - The DOM element to animate
+   * @param {Object} reactionConfig - Animation configuration with scale, brightness, etc.
+   * @param {number} impactForce - Force magnitude (could be used for effect intensity)
+   */
+  applyReactionEffects(element, reactionConfig, impactForce) {
+    const { scale, brightness, saturation, duration } = reactionConfig;
 
-  // Return to original state after a short delay
-  // This creates the "flash" effect - quick reaction then fade back to normal
-  setTimeout(() => {
-    element.style.transform = originalTransform;
-    element.style.filter = originalFilter;
+    // Store the original state so we can restore it later
+    const originalTransform = element.style.transform || '';
+    const originalFilter = element.style.filter || '';
 
-    // Clean up transition after animation completes
+    // Apply the reaction effects immediately
+    element.style.transform = `${originalTransform} scale(${scale.to})`;
+    element.style.filter = `brightness(${brightness.to}) saturate(${saturation.to})`;
+
+    // Set up the return animation using CSS transitions
+    element.style.transition = `transform ${duration}ms ease-out, filter ${duration}ms ease-out`;
+
+    // Return to original state after a short delay
+    // This creates the "flash" effect - quick reaction then fade back to normal
     setTimeout(() => {
-      element.style.transition = '';
-    }, duration);
-  }, 50); // Short delay before starting the return animation
-}
+      element.style.transform = originalTransform;
+      element.style.filter = originalFilter;
 
-/**
- * Check if a physics body represents a ball
- * We identify balls by their label property set during creation
- * @param {Object} body - Matter.js physics body
- * @returns {boolean} - true if this body is a ball
- */
-isBall(body) {
-  return body && body.label === 'physics-ball';
-}
+      // Clean up transition after animation completes
+      setTimeout(() => {
+        element.style.transition = '';
+      }, duration);
+    }, 50); // Short delay before starting the return animation
+  }
 
-/**
- * Check if a physics body represents a boundary (static or reactive)
- * We identify boundaries by checking if they're static and not balls
- * @param {Object} body - Matter.js physics body  
- * @returns {boolean} - true if this body is a boundary
- */
-isBoundary(body) {
-  return body && body.isStatic && body.label !== 'physics-ball';
-}
+  /**
+   * Check if a physics body represents a ball
+   * We identify balls by their label property set during creation
+   * @param {Object} body - Matter.js physics body
+   * @returns {boolean} - true if this body is a ball
+   */
+  isBall(body) {
+    return body && body.label === 'physics-ball';
+  }
 
-/**
- * Get boundary information from our boundary mappers
- * This connects the physics body back to our boundary metadata
- * @param {Object} physicsBody - Matter.js body representing a boundary
- * @returns {Object|null} - boundary info with type and reaction config, or null
- */
-getBoundaryInfo(physicsBody) {
-  // Search through all registered boundary mappers to find info about this body
-  for (const mapper of this.boundaryMappers) {
-    if (mapper && mapper.registeredBoundaries) {
-      for (const [id, boundaryInfo] of mapper.registeredBoundaries) {
-        if (boundaryInfo.physicsBody === physicsBody) {
-          return boundaryInfo;
+  /**
+   * Check if a physics body represents a boundary (static or reactive)
+   * We identify boundaries by checking if they're static and not balls
+   * @param {Object} body - Matter.js physics body  
+   * @returns {boolean} - true if this body is a boundary
+   */
+  isBoundary(body) {
+    return body && body.isStatic && body.label !== 'physics-ball';
+  }
+
+  /**
+   * Get boundary information from our boundary mappers
+   * This connects the physics body back to our boundary metadata
+   * @param {Object} physicsBody - Matter.js body representing a boundary
+   * @returns {Object|null} - boundary info with type and reaction config, or null
+   */
+  getBoundaryInfo(physicsBody) {
+    // Search through all registered boundary mappers to find info about this body
+    for (const mapper of this.boundaryMappers) {
+      if (mapper && mapper.registeredBoundaries) {
+        for (const [id, boundaryInfo] of mapper.registeredBoundaries) {
+          if (boundaryInfo.physicsBody === physicsBody) {
+            return boundaryInfo;
+          }
         }
       }
     }
+    return null; // This boundary isn't tracked by our mappers
   }
-  return null; // This boundary isn't tracked by our mappers
-}
 
-/**
- * Calculate the meaningful impact force from a collision
- * This determines whether the impact was "significant enough" for visual feedback
- * @param {Object} collision - Matter.js collision data
- * @param {Object} ball - The ball object involved in collision
- * @returns {number} - Impact force magnitude
- */
-calculateImpactForce(collision, ball) {
-  // Method 1: Use the ball's velocity magnitude
-  // This represents "how fast was the ball moving when it hit?"
-  const velocity = ball.velocity;
-  const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-  
-  // Method 2: We could also use collision force data
-  // const force = collision.force || 0;
-  
-  // For now, using speed is simpler and more predictable
-  return speed;
-}
+  /**
+   * Calculate the meaningful impact force from a collision
+   * This determines whether the impact was "significant enough" for visual feedback
+   * @param {Object} collision - Matter.js collision data
+   * @param {Object} ball - The ball object involved in collision
+   * @returns {number} - Impact force magnitude
+   */
+  calculateImpactForce(collision, ball) {
+    // Method 1: Use the ball's velocity magnitude
+    // This represents "how fast was the ball moving when it hit?"
+    const velocity = ball.velocity;
+    const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+
+    // Method 2: We could also use collision force data
+    // const force = collision.force || 0;
+
+    // For now, using speed is simpler and more predictable
+    return speed;
+  }
 
   /**
    * Create a single boundary (wall) at specified position
@@ -770,48 +791,48 @@ calculateImpactForce(collision, ball) {
       const ballX = canvasWidth * (0.82 + i * 0.01); // Spread horizontally from 82% to 86%
       const ballY = canvasHeight * (0.05 + i * 0.02); // Stagger vertically in upper 15% of canvas
       const radius = 32 + Math.random() * 8; // Vary size (32-40px)
-      
+
       const ball = this.addBall(ballX, ballY, radius);
-      
+
       if (ball) {
         console.log(`Ball ${i + 1} created at canvas position (${ballX.toFixed(1)}, ${ballY.toFixed(1)}) with radius ${radius.toFixed(1)}`);
       }
     }
   }
 
-/**
- * Set the visual state for a specific ball
- * This allows external systems (like hover detection) to influence how balls are rendered
- * @param {Object} ball - The Matter.js ball object
- * @param {string} state - The visual state ('normal', 'hovered', 'dragged')
- */
-setBallVisualState(ball, state) {
-  if (!ball) {
-    console.warn('PhysicsEngine: Cannot set visual state for null/undefined ball');
-    return;
+  /**
+   * Set the visual state for a specific ball
+   * This allows external systems (like hover detection) to influence how balls are rendered
+   * @param {Object} ball - The Matter.js ball object
+   * @param {string} state - The visual state ('normal', 'hovered', 'dragged')
+   */
+  setBallVisualState(ball, state) {
+    if (!ball) {
+      console.warn('PhysicsEngine: Cannot set visual state for null/undefined ball');
+      return;
+    }
+
+    this.ballVisualStates.set(ball, state);
+    this.log(`PhysicsEngine: Ball visual state set to "${state}"`);
   }
-  
-  this.ballVisualStates.set(ball, state);
-  this.log(`PhysicsEngine: Ball visual state set to "${state}"`);
-}
 
-/**
- * Get the current visual state for a specific ball
- * @param {Object} ball - The Matter.js ball object
- * @returns {string} - The visual state ('normal' is default)
- */
-getBallVisualState(ball) {
-  return this.ballVisualStates.get(ball) || 'normal';
-}
+  /**
+   * Get the current visual state for a specific ball
+   * @param {Object} ball - The Matter.js ball object
+   * @returns {string} - The visual state ('normal' is default)
+   */
+  getBallVisualState(ball) {
+    return this.ballVisualStates.get(ball) || 'normal';
+  }
 
-/**
- * Clear visual state for a specific ball (returns it to normal)
- * @param {Object} ball - The Matter.js ball object
- */
-clearBallVisualState(ball) {
-  this.ballVisualStates.delete(ball);
-  this.log('PhysicsEngine: Ball visual state cleared (returned to normal)');
-}
+  /**
+   * Clear visual state for a specific ball (returns it to normal)
+   * @param {Object} ball - The Matter.js ball object
+   */
+  clearBallVisualState(ball) {
+    this.ballVisualStates.delete(ball);
+    this.log('PhysicsEngine: Ball visual state cleared (returned to normal)');
+  }
 
 
   /**
@@ -893,5 +914,5 @@ clearBallVisualState(ball) {
     });
   }
 
-  
+
 }

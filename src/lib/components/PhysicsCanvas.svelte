@@ -3,21 +3,27 @@
   import { CanvasManager } from "@physics/CanvasManager.js";
   import { PhysicsEngine } from "@physics/PhysicsEngine.js";
   import { BallHoverDetection } from "@lib/services/BallHoverDetection.js";
-  // Updated import path for consistency with your other @lib imports
   import { BallDragManager } from "@lib/services/BallDragManager.js";
-  import { canvasPointerEvents, enableBallInteraction, enableNormalBrowsing } from "@stores/interaction.js";
+  import {
+    detectPrimaryInputMethod,
+    getDeviceCapabilities,
+  } from "@utils/deviceDetection.js";
+
+  import {
+    canvasPointerEvents,
+    enableBallInteraction,
+    enableNormalBrowsing,
+  } from "@stores/interaction.js";
   import { physicsEngine, physicsEnabled } from "@stores/physics.js";
 
-  // Props for configuration
   export let debug = false;
   export let enabled = true;
 
-  // Component state variables - organized by system responsibility
   let canvasElement;
   let canvasManager;
   let engine;
   let hoverDetection;
-  let dragManager; // Your existing addition - perfect placement
+  let dragManager;
 
   onMount(() => {
     console.log("PhysicsCanvas: Starting initialization...");
@@ -97,7 +103,7 @@
       // Initialize the physics world
       if (engine.init()) {
         console.log("PhysicsCanvas: Physics engine initialized successfully");
-    
+
         // Start the physics simulation
         engine.start();
 
@@ -114,7 +120,6 @@
 
         // Drag management second (builds upon hover detection concepts)
         initializeDragManager();
-
       } else {
         console.error("PhysicsCanvas: Failed to initialize physics engine");
       }
@@ -130,28 +135,67 @@
    * Initialize the hover detection service after physics engine is ready
    * This creates the bridge between mouse events and automatic interaction mode switching
    */
+  /**
+   * Initialize the hover detection service after physics engine is ready
+   * Now includes intelligent device detection to avoid conflicts on touch devices
+   */
   function initializeHoverDetection() {
     if (!engine) {
-      console.warn("PhysicsCanvas: Cannot initialize hover detection without physics engine");
+      console.warn(
+        "PhysicsCanvas: Cannot initialize hover detection without physics engine"
+      );
       return;
     }
-    
+
+    // Get comprehensive device information for debugging and decision making
+    const deviceCapabilities = getDeviceCapabilities();
+    console.log(
+      "PhysicsCanvas: Device capabilities analysis:",
+      deviceCapabilities
+    );
+
+    // Extract the primary input method for our decision logic
+    const inputMethod = deviceCapabilities.primaryInputMethod;
+
+    // Only initialize hover detection for devices where it enhances the experience
+    if (inputMethod === "touch-primary") {
+      console.log(
+        "PhysicsCanvas: Touch-primary device detected - hover detection disabled"
+      );
+      console.log(
+        "PhysicsCanvas: Users will interact directly with balls via drag gestures"
+      );
+      // Ensure the canvas receives pointer/touch events for dragging
+      enableBallInteraction();
+      return; // Early return - don't initialize hover detection
+    }
+
+    // Log the decision for debugging
+    console.log(
+      `PhysicsCanvas: Initializing hover detection for ${inputMethod} device`
+    );
+
     try {
       // Create the interaction store interface that our service needs
       const interactionInterface = {
         enableBallInteraction,
-        enableNormalBrowsing
+        enableNormalBrowsing,
       };
-      
+
       // Create the hover detection service
       hoverDetection = new BallHoverDetection(engine, interactionInterface);
-      
+
       // Start the hover detection system
       hoverDetection.start();
-      
-      console.log("PhysicsCanvas: Hover detection initialized and started");
+
+      console.log(
+        `PhysicsCanvas: Hover detection active for ${inputMethod} device`
+      );
     } catch (error) {
-      console.error("PhysicsCanvas: Failed to initialize hover detection:", error);
+      console.error(
+        "PhysicsCanvas: Failed to initialize hover detection:",
+        error
+      );
     }
   }
 
@@ -161,17 +205,19 @@
    */
   function initializeDragManager() {
     if (!engine || !canvasElement) {
-      console.warn("PhysicsCanvas: Cannot initialize drag manager without engine and canvas");
+      console.warn(
+        "PhysicsCanvas: Cannot initialize drag manager without engine and canvas"
+      );
       return;
     }
-    
+
     try {
       // Create the drag manager with references to physics engine and canvas
       dragManager = new BallDragManager(engine, canvasElement);
-      
+
       // Start the drag manager service
       const success = dragManager.start();
-      
+
       if (success) {
         console.log("PhysicsCanvas: Drag manager initialized successfully");
       } else {
@@ -197,7 +243,9 @@
       const sizeChanged = originalUpdate();
 
       if (sizeChanged && engine) {
-        console.log('PhysicsCanvas: Canvas size changed, updating physics boundaries');
+        console.log(
+          "PhysicsCanvas: Canvas size changed, updating physics boundaries"
+        );
         engine.updateBoundaries();
       }
 
