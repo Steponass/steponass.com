@@ -2,7 +2,8 @@
   import { onMount } from "svelte";
   import { CanvasManager } from "@physics/CanvasManager.js";
   import { PhysicsEngine } from "@physics/PhysicsEngine.js";
-  import { canvasPointerEvents } from "@stores/interaction.js";
+  import { BallHoverDetection } from "@lib/services/BallHoverDetection.js";
+  import { canvasPointerEvents, enableBallInteraction, enableNormalBrowsing } from "@stores/interaction.js";
   import { physicsEngine, physicsEnabled } from "@stores/physics.js";
 
   // Props for configuration
@@ -11,7 +12,8 @@
 
   let canvasElement;
   let canvasManager;
-  let engine; // Our physics engine instance
+  let engine;
+  let hoverDetection;
 
   onMount(() => {
     console.log("PhysicsCanvas: Starting initialization...");
@@ -34,6 +36,12 @@
     // Cleanup function - Svelte will call this when component unmounts
     return () => {
       console.log("PhysicsCanvas: Cleaning up...");
+
+        // Clean up hover detection first (it depends on physics engine)
+  if (hoverDetection) {
+    hoverDetection.stop();
+    hoverDetection = null;
+  }
 
       if (engine) {
         engine.cleanup();
@@ -85,6 +93,9 @@
 
         // Set up canvas resize handler for physics
         setupPhysicsResizeHandler();
+
+      // Initialize hover detection after physics is ready
+      initializeHoverDetection();
       } else {
         console.error("PhysicsCanvas: Failed to initialize physics engine");
       }
@@ -95,6 +106,35 @@
       );
     }
   }
+
+/**
+ * Initialize the hover detection service after physics engine is ready
+ * This creates the bridge between mouse events and automatic interaction mode switching
+ */
+ function initializeHoverDetection() {
+  if (!engine) {
+    console.warn("PhysicsCanvas: Cannot initialize hover detection without physics engine");
+    return;
+  }
+  
+  try {
+    // Create the interaction store interface that our service needs
+    const interactionInterface = {
+      enableBallInteraction,
+      enableNormalBrowsing
+    };
+    
+    // Create the hover detection service
+    hoverDetection = new BallHoverDetection(engine, interactionInterface);
+    
+    // Start the hover detection system
+    hoverDetection.start();
+    
+    console.log("PhysicsCanvas: Hover detection initialized and started");
+  } catch (error) {
+    console.error("PhysicsCanvas: Failed to initialize hover detection:", error);
+  }
+}
 
   /**
    * Handle canvas size changes and update physics accordingly
