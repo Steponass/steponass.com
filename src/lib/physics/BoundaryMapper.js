@@ -1,5 +1,16 @@
 import Matter from 'matter-js';
 
+const STANDARD_REACTION_CONFIG = {
+  animation: {
+    scale: { from: 1.0, to: 1.05 },
+    brightness: { from: 1.0, to: 1.2 },
+    saturation: { from: 1.0, to: 1.3 },
+    duration: 200 // ms
+  },
+  defaultVelocityThreshold: 2.5 // adjustable default
+};
+
+
 /*
  * Handles the coordinate translation between DOM (top-left origin) and physics (center origin)
  */
@@ -26,6 +37,13 @@ export class BoundaryMapper {
    * @returns {Object|null} - the created physics body or null if failed
    */
   registerBoundary(id, element, options = {}) {
+
+    const {
+      boundaryType = 'static', // defaults to static for backward compatibility
+      velocityThreshold = STANDARD_REACTION_CONFIG.defaultVelocityThreshold,
+      ...physicsOptions // all other options go to Matter.js body
+    } = options;
+
     if (!element || !this.physicsEngine?.world) {
       console.warn('BoundaryMapper: Missing element or physics world');
       return null;
@@ -37,6 +55,8 @@ export class BoundaryMapper {
       this.updateBoundaryPosition(id, element);
       return this.registeredBoundaries.get(id).physicsBody;
     }
+
+
 
     try {
       // Get element's current position and size (simplified)
@@ -60,8 +80,15 @@ export class BoundaryMapper {
         this.registeredBoundaries.set(id, {
           element,
           physicsBody,
-          options,
-          originalRect: rect // Store original rect for position updates
+          options: physicsOptions,
+          originalRect: rect,
+          // NEW: Boundary classification data
+          boundaryType,
+          reactionConfig: boundaryType === 'reactive' ? {
+            velocityThreshold,
+            ...STANDARD_REACTION_CONFIG.animation
+          } : null,
+          resizeObserver: null // will be set later
         });
 
         // Set up element-specific ResizeObserver
@@ -80,21 +107,24 @@ export class BoundaryMapper {
 
   /**
    * Get element's bounding rectangle relative to main container (simplified)
+   *  * @param {HTMLElement} element - The DOM element to measure
+ * @returns {Object} - Rectangle with position and dimensions
    */
   getElementRect(element) {
     const rect = element.getBoundingClientRect();
-
-    // Since we're now working in canvas-relative coordinates (within main),
-    // we can use the viewport rect directly as it's relative to the canvas parent
+    const canvas = this.physicsEngine?.canvas;
+    const canvasRect = canvas?.getBoundingClientRect();
+    const offsetLeft = canvasRect ? canvasRect.left : 0;
+    const offsetTop = canvasRect ? canvasRect.top : 0;
     const elementRect = {
-      left: rect.left,
-      top: rect.top,
+      left: rect.left - offsetLeft,
+      top: rect.top - offsetTop,
       width: rect.width,
       height: rect.height,
-      right: rect.right,
-      bottom: rect.bottom,
-      x: rect.left,
-      y: rect.top
+      right: rect.right - offsetLeft,
+      bottom: rect.bottom - offsetTop,
+      x: rect.left - offsetLeft,
+      y: rect.top - offsetTop
     };
 
     if (this.debug) {

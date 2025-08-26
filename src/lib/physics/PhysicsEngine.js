@@ -44,6 +44,9 @@ export class PhysicsEngine {
       // Create boundaries around the canvas edges
       this.createViewportBoundaries();
 
+// Set up collision event listening for reactive boundaries
+this.setupCollisionEvents();
+
       // Create the initial ball
       this.createInitialBall();
 
@@ -334,7 +337,7 @@ export class PhysicsEngine {
       this.createBoundary(thickness / 25, height / 2, thickness, height, 'left-wall'),
       
       // Right wall - positioned inside the right edge of canvas  
-      this.createBoundary(width - thickness / 25, height / 4, thickness, height, 'right-wall')
+      this.createBoundary(width - thickness / 25, height / 2, thickness, height, 'right-wall')
     ];
   
     // Add all boundaries to the physics world
@@ -353,6 +356,189 @@ export class PhysicsEngine {
       }
     });
   }
+
+/**
+ * Set up collision event listeners for reactive boundary feedback
+ * This is the "security camera notification system" for physics interactions
+ */
+setupCollisionEvents() {
+  if (!this.engine) {
+    console.warn('PhysicsEngine: Cannot setup collision events without engine');
+    return;
+  }
+
+  // Matter.js provides several collision events, but we want 'collisionStart'
+  // This fires once when objects first make contact (not continuously while touching)
+  Matter.Events.on(this.engine, 'collisionStart', (event) => {
+    this.handleCollisionStart(event);
+  });
+
+  this.log('PhysicsEngine: Collision event listeners established');
+}
+
+
+/**
+ * Handle collision start events - this is our "detective work" method
+ * Examines each collision to determine if visual feedback should trigger
+ * @param {Object} event - Matter.js collision event containing pairs of colliding objects
+ */
+handleCollisionStart(event) {
+  // Matter.js gives us an array of collision pairs
+  // Each pair represents two objects that just started touching
+  const pairs = event.pairs;
+
+  pairs.forEach(pair => {
+    // Extract the two objects involved in this collision
+    const { bodyA, bodyB, collision } = pair;
+
+    // Step 1: Identify which object is the ball and which is the boundary
+    // We need to check both directions since we don't know the order
+    let ball = null;
+    let boundary = null;
+
+    if (this.isBall(bodyA) && this.isBoundary(bodyB)) {
+      ball = bodyA;
+      boundary = bodyB;
+    } else if (this.isBall(bodyB) && this.isBoundary(bodyA)) {
+      ball = bodyB;
+      boundary = bodyA;
+    } else {
+      // This collision doesn't involve a ball hitting a boundary
+      // Could be ball-to-ball, boundary-to-boundary, or ball-to-viewport-wall
+      return; // Skip this collision
+    }
+
+    // Step 2: Check if this boundary is reactive
+    const boundaryInfo = this.getBoundaryInfo(boundary);
+    if (!boundaryInfo || boundaryInfo.boundaryType !== 'reactive') {
+      return; // Static boundary - no visual feedback needed
+    }
+
+    // Step 3: Calculate impact force and check threshold
+    const impactForce = this.calculateImpactForce(collision, ball);
+    if (impactForce < boundaryInfo.reactionConfig.velocityThreshold) {
+      return; // Impact too gentle - no reaction needed
+    }
+
+    // All conditions met! Trigger visual feedback
+    this.triggerBoundaryReaction(boundaryInfo, impactForce);
+  });
+}
+
+/**
+ * Trigger visual reaction for a boundary that was hit by a ball
+ * This bridges the physics world back to DOM visual effects
+ * @param {Object} boundaryInfo - The boundary data including DOM element and reaction config
+ * @param {number} impactForce - The calculated impact force for potential effect scaling
+ */
+triggerBoundaryReaction(boundaryInfo, impactForce) {
+  const { element, reactionConfig } = boundaryInfo;
+  
+  if (!element || !reactionConfig) {
+    this.log('PhysicsEngine: Cannot trigger reaction - missing element or config');
+    return;
+  }
+
+  // Apply visual effects using CSS custom properties
+  // This is the "lighting up" moment when physics meets visual design
+  this.applyReactionEffects(element, reactionConfig, impactForce);
+
+  this.log(`PhysicsEngine: Triggered reaction for ${boundaryInfo.physicsBody.label} with force ${impactForce.toFixed(2)}`);
+}
+
+/**
+ * Apply the actual visual effects to a DOM element
+ * Uses CSS custom properties for smooth, hardware-accelerated animations
+ * @param {HTMLElement} element - The DOM element to animate
+ * @param {Object} reactionConfig - Animation configuration with scale, brightness, etc.
+ * @param {number} impactForce - Force magnitude (could be used for effect intensity)
+ */
+applyReactionEffects(element, reactionConfig, impactForce) {
+  const { scale, brightness, saturation, duration } = reactionConfig;
+
+  // Store the original state so we can restore it later
+  const originalTransform = element.style.transform || '';
+  const originalFilter = element.style.filter || '';
+
+  // Apply the reaction effects immediately
+  element.style.transform = `${originalTransform} scale(${scale.to})`;
+  element.style.filter = `brightness(${brightness.to}) saturate(${saturation.to})`;
+  
+  // Set up the return animation using CSS transitions
+  element.style.transition = `transform ${duration}ms ease-out, filter ${duration}ms ease-out`;
+
+  // Return to original state after a short delay
+  // This creates the "flash" effect - quick reaction then fade back to normal
+  setTimeout(() => {
+    element.style.transform = originalTransform;
+    element.style.filter = originalFilter;
+
+    // Clean up transition after animation completes
+    setTimeout(() => {
+      element.style.transition = '';
+    }, duration);
+  }, 50); // Short delay before starting the return animation
+}
+
+/**
+ * Check if a physics body represents a ball
+ * We identify balls by their label property set during creation
+ * @param {Object} body - Matter.js physics body
+ * @returns {boolean} - true if this body is a ball
+ */
+isBall(body) {
+  return body && body.label === 'physics-ball';
+}
+
+/**
+ * Check if a physics body represents a boundary (static or reactive)
+ * We identify boundaries by checking if they're static and not balls
+ * @param {Object} body - Matter.js physics body  
+ * @returns {boolean} - true if this body is a boundary
+ */
+isBoundary(body) {
+  return body && body.isStatic && body.label !== 'physics-ball';
+}
+
+/**
+ * Get boundary information from our boundary mappers
+ * This connects the physics body back to our boundary metadata
+ * @param {Object} physicsBody - Matter.js body representing a boundary
+ * @returns {Object|null} - boundary info with type and reaction config, or null
+ */
+getBoundaryInfo(physicsBody) {
+  // Search through all registered boundary mappers to find info about this body
+  for (const mapper of this.boundaryMappers) {
+    if (mapper && mapper.registeredBoundaries) {
+      for (const [id, boundaryInfo] of mapper.registeredBoundaries) {
+        if (boundaryInfo.physicsBody === physicsBody) {
+          return boundaryInfo;
+        }
+      }
+    }
+  }
+  return null; // This boundary isn't tracked by our mappers
+}
+
+/**
+ * Calculate the meaningful impact force from a collision
+ * This determines whether the impact was "significant enough" for visual feedback
+ * @param {Object} collision - Matter.js collision data
+ * @param {Object} ball - The ball object involved in collision
+ * @returns {number} - Impact force magnitude
+ */
+calculateImpactForce(collision, ball) {
+  // Method 1: Use the ball's velocity magnitude
+  // This represents "how fast was the ball moving when it hit?"
+  const velocity = ball.velocity;
+  const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+  
+  // Method 2: We could also use collision force data
+  // const force = collision.force || 0;
+  
+  // For now, using speed is simpler and more predictable
+  return speed;
+}
 
   /**
    * Create a single boundary (wall) at specified position
@@ -529,7 +715,7 @@ export class PhysicsEngine {
     const canvasHeight = this.canvas.height;
 
     // Create multiple balls with slight position variations
-    const numBalls = 9;
+    const numBalls = 5;
     for (let i = 0; i < numBalls; i++) {
       const ballX = canvasWidth * (0.82 + i * 0.01); // Spread horizontally from 82% to 86%
       const ballY = canvasHeight * (0.05 + i * 0.02); // Stagger vertically in upper 15% of canvas

@@ -24,14 +24,17 @@
     );
 
     registeredBoundary = physicsContext.registerBoundary(
-      `skill-card-${title.toLowerCase().replace(/\s+/g, "-")}`, // unique ID based on title
-      skillElement, // the DOM element to map
-      {
-        restitution: 0.8, // moderately bouncy
-        friction: 0.2, // low friction for smooth interactions
-        label: `skill-card-${title}`, // debug label
-      }
-    );
+  `skill-card-${title.toLowerCase().replace(/\s+/g, "-")}`,
+  skillElement,
+  {
+    restitution: 0.8,
+    friction: 0.2,
+    label: `skill-card-${title}`,
+
+    boundaryType: 'reactive',
+    velocityThreshold: 4 // You can adjust this per skill card if needed
+  }
+);
 
     if (registeredBoundary) {
       console.log(
