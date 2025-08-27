@@ -17,14 +17,14 @@
 /* https://www.fluid-type-scale.com/calculate?minFontSize=16&minWidth=375&minRatio=1.25&maxFontSize=18&maxWidth=1920&maxRatio=1.33&steps=s%2Cp%2Ch6%2Ch5%2Ch4%2Ch3%2Ch2%2C+h1&baseStep=p&prefix=fs&useContainerWidth=false&includeFallbacks=false&useRems=true&remValue=16&decimals=2&previewFont=Geologica&previewText=Almost+before+we+knew+it%2C+we+had+left+the+ground&previewWidth=375 */
 
 :root {
-  --fs-s: clamp(0.8rem, 0.05vi + 0.79rem, 0.85rem);
+  --fs-s: clamp(0.83rem, 0.01vi + 0.83rem, 0.85rem);
   --fs-p: clamp(1rem, 0.13vi + 0.97rem, 1.13rem);
-  --fs-h6: clamp(1.25rem, 0.26vi + 1.19rem, 1.5rem);
-  --fs-h5: clamp(1.56rem, 0.44vi + 1.46rem, 1.99rem);
-  --fs-h4: clamp(1.95rem, 0.72vi + 1.78rem, 2.65rem);
-  --fs-h3: clamp(2.44rem, 1.12vi + 2.18rem, 3.52rem);
-  --fs-h2: clamp(3.05rem, 1.69vi + 2.66rem, 4.68rem);
-  --fs-h1: clamp(3.81rem, 2.5vi + 3.23rem, 6.23rem);
+  --fs-h6: clamp(1.2rem, 0.31vi + 1.13rem, 1.5rem);
+  --fs-h5: clamp(1.44rem, 0.57vi + 1.31rem, 1.99rem);
+  --fs-h4: clamp(1.73rem, 0.95vi + 1.51rem, 2.65rem);
+  --fs-h3: clamp(2.07rem, 1.5vi + 1.72rem, 3.52rem);
+  --fs-h2: clamp(2.49rem, 2.27vi + 1.96rem, 4.68rem);
+  --fs-h1: clamp(2.99rem, 3.36vi + 2.2rem, 6.23rem);
 }
 
 :where(span) {font-size: var(--fs-s)}

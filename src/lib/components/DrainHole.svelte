@@ -83,7 +83,7 @@
     transform: translate(-50%, -50%);
     
     /* Layering - should be above canvas but below balls */
-    z-index: 2;
+    z-index: var(--z-index-drain-hole);
     
     /* Size based on visual radius */
     width: calc(var(--visual-radius) * 2);

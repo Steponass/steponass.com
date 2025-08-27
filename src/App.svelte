@@ -24,7 +24,6 @@
 {#if loaded}
   <main>
     <PhysicsCanvas debug={true} />
-    <!-- Temporary interaction switch for debugging -->
 
     <PhysicsAwareSection sectionId="hero-section" debug={true}>
       <HeroSection />

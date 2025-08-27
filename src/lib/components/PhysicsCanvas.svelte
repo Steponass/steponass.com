@@ -89,10 +89,12 @@
         canvasManager.stopWatching();
       }
 
+      // PART of handleScroll on line 39, so commented out
       // Clean up scroll handler and timeout
-      try {
-        window.removeEventListener("wheel", handleScroll);
-      } catch {}
+      // try {
+      //   window.removeEventListener("wheel", handleScroll);
+      // } catch {}
+
       if (scrollTimeout) {
         clearTimeout(scrollTimeout);
         scrollTimeout = null;

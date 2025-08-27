@@ -28,6 +28,10 @@ export class PhysicsEngine {
     this.domBoundaries = []; // Track DOM-derived boundaries separately from viewport boundaries
     this.boundaryMappers = []; // Track all boundary mappers using this engine
 
+    // Track previous canvas dimensions for proportional ball scaling during resize
+    this.previousCanvasWidth = 0;
+    this.previousCanvasHeight = 0;
+
     // Debug mode helps us see what's happening behind the scenes
     this.debugMode = true; // We'll make this configurable later
 
@@ -396,6 +400,10 @@ export class PhysicsEngine {
     const height = this.canvas.height;
     const thickness = 250; // Increased thickness
 
+    // Store initial canvas dimensions for future scaling calculations
+    this.previousCanvasWidth = width;
+    this.previousCanvasHeight = height;
+
     const boundaries = [
       // Floor - bottom boundary (extends outward)
       this.createBoundary(width / 2, height + thickness / 2, width, thickness, 'floor'),
@@ -691,22 +699,48 @@ export class PhysicsEngine {
     //  Update drain hole position for new canvas size
     this.updateDrainHolePosition();
 
-    // Ensure balls are not below the new floor after rapid viewport changes
+    // Proportionally reposition balls based on canvas size change
     try {
-      const floorTopY = height; // Floor's top edge aligns with canvas height
-      this.balls.forEach(ball => {
-        const radius = ball.circleRadius || 22;
-        const maxAllowedY = floorTopY - radius - 0.5; // small epsilon
-        if (ball.position.y > maxAllowedY) {
-          Matter.Body.setPosition(ball, { x: ball.position.x, y: maxAllowedY });
-          if (ball.velocity.y > 0) {
-            Matter.Body.setVelocity(ball, { x: ball.velocity.x, y: 0 });
-          }
-        }
-      });
+      if (this.previousCanvasWidth > 0 && this.previousCanvasHeight > 0) {
+        const scaleX = width / this.previousCanvasWidth;
+        const scaleY = height / this.previousCanvasHeight;
+        
+        console.log(`Scaling balls: ${this.previousCanvasWidth}x${this.previousCanvasHeight} → ${width}x${height} (scale: ${scaleX.toFixed(3)}x, ${scaleY.toFixed(3)}y)`);
+        
+        this.balls.forEach(ball => {
+          const currentX = ball.position.x;
+          const currentY = ball.position.y;
+          
+          // Calculate new position with proportional scaling
+          const newX = currentX * scaleX;
+          const newY = currentY * scaleY;
+          
+          // Ensure ball stays within canvas bounds
+          const radius = ball.circleRadius || 22;
+          const clampedX = Math.max(radius, Math.min(width - radius, newX));
+          const clampedY = Math.max(radius, Math.min(height - radius, newY));
+          
+          // Update ball position
+          Matter.Body.setPosition(ball, { x: clampedX, y: clampedY });
+          
+          // Scale velocity proportionally to maintain physics behavior
+          const currentVel = ball.velocity;
+          const scaledVelX = currentVel.x * scaleX;
+          const scaledVelY = currentVel.y * scaleY;
+          Matter.Body.setVelocity(ball, { x: scaledVelX, y: scaledVelY });
+          
+          console.log(`Ball repositioned: (${currentX.toFixed(1)}, ${currentY.toFixed(1)}) → (${clampedX.toFixed(1)}, ${clampedY.toFixed(1)})`);
+        });
+      } else {
+        console.log('No previous dimensions available, skipping ball scaling');
+      }
     } catch (err) {
-      console.warn('Post-boundary ball adjustment failed:', err);
+      console.warn('Ball repositioning during resize failed:', err);
     }
+
+    // Update stored dimensions for next resize
+    this.previousCanvasWidth = width;
+    this.previousCanvasHeight = height;
 
     console.log('Boundary update complete');
 

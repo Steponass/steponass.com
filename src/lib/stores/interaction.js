@@ -1,8 +1,5 @@
 import { writable } from 'svelte/store';
 
-/**
- * Interaction modes for the physics canvas
- */
 export const InteractionMode = {
   NORMAL_BROWSING: 'normal_browsing',
   BALL_INTERACTION: 'ball_interaction'
@@ -34,25 +31,10 @@ export function lockCanvasPointerEvents(value) {
   interactionMode.update(m => m);
 }
 
-/**
- * Utility functions to change interaction modes
- */
 export function enableBallInteraction() {
   interactionMode.set(InteractionMode.BALL_INTERACTION);
 }
 
 export function enableNormalBrowsing() {
   interactionMode.set(InteractionMode.NORMAL_BROWSING);
-}
-
-/**
- * Temporary ball interaction (useful for brief interactions)
- * Automatically returns to normal browsing after a delay
- */
-export function temporaryBallInteraction(durationMs = 2000) {
-  enableBallInteraction();
-
-  setTimeout(() => {
-    enableNormalBrowsing();
-  }, durationMs);
 }
