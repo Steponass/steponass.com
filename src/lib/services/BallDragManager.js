@@ -75,7 +75,7 @@ export class BallDragManager {
       this.mouseConstraint = Matter.MouseConstraint.create(this.physicsEngine.engine, {
         mouse: this.mouse,
         constraint: {
-          stiffness: 0.2,     // How "springy" the drag connection feels
+          stiffness: 1,     // How "springy" the drag connection feels
           render: {
             visible: this.debug  // Show constraint visually in debug mode
           }

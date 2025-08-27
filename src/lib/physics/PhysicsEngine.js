@@ -212,12 +212,6 @@ export class PhysicsEngine {
       this.ctx.arc(x, y, radius, 0, Math.PI * 2);
       this.ctx.fill();
 
-      // Add a subtle highlight to make it look more 3D
-      this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-      this.ctx.beginPath();
-      this.ctx.arc(x - radius * 0.3, y - radius * 0.3, radius * 0.4, 0, Math.PI * 2);
-      this.ctx.fill();
-
       // Debug: show ball center and velocity vector if in debug mode
       if (this.debugMode) {
         // Mark center point
@@ -395,7 +389,7 @@ export class PhysicsEngine {
 
     const width = this.canvas.width;
     const height = this.canvas.height;
-    const thickness = 150; // Increased thickness
+    const thickness = 250; // Increased thickness
 
     const boundaries = [
       // Floor - bottom boundary (extends outward)
@@ -728,10 +722,10 @@ export class PhysicsEngine {
     try {
       const ball = Matter.Bodies.circle(x, y, radius, {
         // Physical properties that affect how the ball behaves
-        restitution: 0.7,    // Bounciness (0.7 = fairly bouncy)
-        friction: 0.05,      // Surface friction (low = rolls easily) 
+        restitution: 0.9,    // Bounciness (0.7 = fairly bouncy)
+        friction: 0.02,      // Surface friction (low = rolls easily) 
         frictionAir: 0.01,   // Air resistance (prevents infinite bouncing)
-        density: 0.001,      // Mass per unit area (affects how heavy it feels)
+        density: 0.02,      // Mass per unit area (affects how heavy it feels)
 
         // Visual properties for Matter.js built-in renderer (we don't use this, but good to have)
         render: {

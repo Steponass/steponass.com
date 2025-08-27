@@ -18,12 +18,12 @@ export class BallHoverDetection {
     this.mousePosition = { x: 0, y: 0 };
     
     // Hover detection configuration
-    this.hoverRadius = 25; // pixels - how close mouse needs to be to trigger hover
+    this.hoverRadius = 15; // pixels - how close mouse needs to be to trigger hover
     this.currentHoveredBall = null; // which ball (if any) is currently being hovered
     
     // Performance optimization - we don't need to check every single frame
     this.checkInterval = null;
-    this.checkFrequency = 100; // milliseconds between checks
+    this.checkFrequency = 200; // milliseconds between checks
     
     // State tracking
     this.isActive = false;

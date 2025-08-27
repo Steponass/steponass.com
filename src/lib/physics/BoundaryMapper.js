@@ -7,7 +7,7 @@ const STANDARD_REACTION_CONFIG = {
     saturation: { from: 1.0, to: 1.3 },
     duration: 200 // ms
   },
-  defaultVelocityThreshold: 2.5 // adjustable default
+  defaultVelocityThreshold: 2 // adjustable default
 };
 
 
@@ -34,6 +34,9 @@ export class BoundaryMapper {
    * @param {string} id - unique identifier for this boundary
    * @param {HTMLElement} element - the DOM element to map
    * @param {Object} options - physics properties (restitution, friction, etc.)
+   * @param {string} options.shape - shape type: 'rectangle' (default) or 'circle'
+   * @param {string} options.boundaryType - boundary type: 'static' or 'reactive'
+   * @param {number} options.velocityThreshold - minimum velocity for reactive boundaries
    * @returns {Object|null} - the created physics body or null if failed
    */
   registerBoundary(id, element, options = {}) {
@@ -41,6 +44,7 @@ export class BoundaryMapper {
     const {
       boundaryType = 'static', // defaults to static for backward compatibility
       velocityThreshold = STANDARD_REACTION_CONFIG.defaultVelocityThreshold,
+      shape = 'rectangle', // defaults to rectangle for backward compatibility
       ...physicsOptions // all other options go to Matter.js body
     } = options;
 
@@ -82,7 +86,6 @@ export class BoundaryMapper {
           physicsBody,
           options: physicsOptions,
           originalRect: rect,
-          // NEW: Boundary classification data
           boundaryType,
           reactionConfig: boundaryType === 'reactive' ? {
             velocityThreshold,
@@ -182,27 +185,43 @@ export class BoundaryMapper {
     const centerX = rect.left + (rect.width / 2);
     const centerY = rect.top + (rect.height / 2);
 
+    // Extract shape option from physics options
+    const { shape = 'rectangle', ...physicsOptions } = options;
+
     // Default physics properties
-    const physicsOptions = {
+    const defaultOptions = {
       isStatic: true, // DOM elements don't move due to physics
       label: label || 'dom-boundary',
       render: {
         fillStyle: 'transparent' // We don't want Matter.js to render these
       },
       // Default bouncy properties (can be overridden)
-      restitution: 0.6, // bounciness
-      friction: 0.3,     // surface friction
-      ...options         // Allow overriding defaults
+      restitution: 0.1, // bounciness
+      friction: 0.2,     // surface friction
+      ...physicsOptions  // Allow overriding defaults
     };
 
     try {
-      const body = Matter.Bodies.rectangle(
-        centerX,
-        centerY,
-        rect.width,
-        rect.height,
-        physicsOptions
-      );
+      let body;
+
+      if (shape === 'circle') {
+        // For circular boundaries, use the smaller dimension as diameter
+        const radius = Math.min(rect.width, rect.height) / 2;
+        body = Matter.Bodies.circle(centerX, centerY, radius, defaultOptions);
+
+        if (this.debug) {
+          this.log(`BoundaryMapper: Created circular boundary with radius ${radius}px`);
+        }
+      } else {
+        // Default rectangular boundary
+        body = Matter.Bodies.rectangle(
+          centerX,
+          centerY,
+          rect.width,
+          rect.height,
+          defaultOptions
+        );
+      }
 
       return body;
     } catch (error) {
