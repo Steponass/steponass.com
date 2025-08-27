@@ -34,14 +34,16 @@
     console.log("PhysicsCanvas: Starting initialization (onMount entered)...");
 
     // Disable canvas interaction during scroll to allow smooth scrolling
-    const handleScroll = () => {
-      canvasPointerEvents.set("none");
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        canvasPointerEvents.set("auto");
-      }, 200);
-    };
-    window.addEventListener("wheel", handleScroll, { passive: true });
+    //THIS WAS SUPPOSED TO HELP WITH DISTINGUISHING TOUCH TO SCROLL VS TOUCH TO GRAB BALL, BUT NOW IT CAUSES MASSIVE NORMAL BROWSING/BALL HANDLING SWITCH ISSUES, SO LEAVING IT IN CASE, BUT DO NOT USE UNLESS TOUCH TO SCROLL GETS LOUSY AGAIN
+
+    // const handleScroll = () => {
+    //   canvasPointerEvents.set("none");
+    //   clearTimeout(scrollTimeout);
+    //   scrollTimeout = setTimeout(() => {
+    //     canvasPointerEvents.set("auto");
+    //   }, 200);
+    // };
+    // window.addEventListener("wheel", handleScroll, { passive: true });
 
     // Step 1: Initialize CanvasManager first (handles sizing)
     canvasManager = new CanvasManager(canvasElement, {

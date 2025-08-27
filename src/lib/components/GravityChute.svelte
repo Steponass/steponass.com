@@ -17,12 +17,12 @@
   // Chute configuration
   const CHUTE_WIDTH = 80;           // Pipe inner width
   const CHUTE_WALL_THICKNESS = 8;   // Pipe wall thickness
-  const CHUTE_HEIGHT = 200;         // Visible pipe length
-  const BALL_SPACING = 45;          // Space between balls in pipe
+  const CHUTE_HEIGHT = 400;         // Visible pipe length (increased for 12 balls)
+  const BALL_SPACING = 30;          // Space between balls in pipe (reduced for 12 balls)
 
   // Position at 25% from right edge of canvas
   $: chuteX = canvasWidth * 0.8;   // 75% from left = 25% from right
-  $: chuteY = 20;                   // Near top of canvas
+  $: chuteY = -(CHUTE_HEIGHT * 0.75); // Position 75% of chute above screen (only bottom 25% visible)
 
   // Visual states
   $: hasQueuedBalls = $queueLength > 0;
@@ -90,7 +90,7 @@
   <!-- Queue status indicator (optional) -->
   {#if hasQueuedBalls}
     <div class="queue-status">
-      {$queueLength}/3
+      {$queueLength}/12
     </div>
   {/if}
 </div>

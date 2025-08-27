@@ -11,7 +11,7 @@ import { writable, derived } from 'svelte/store';
  */
 
 // Maximum number of balls that can be stored in the chute
-const MAX_QUEUE_CAPACITY = 5;
+const MAX_QUEUE_CAPACITY = 18;
 
 /**
  * Core queue state - array of ball objects waiting in the chute
@@ -60,7 +60,7 @@ export function addBallToQueue(ballData) {
       // Add ball data to the end of the queue (bottom of chute visually)
       const newBall = {
         id: `queued-ball-${Date.now()}`, // Unique identifier
-        radius: ballData.radius || 32,
+        radius: ballData.radius || 22,
         color: ballData.color || '#ff6b6b',
         // Store timestamp for potential future features (aging, priority, etc.)
         queuedAt: Date.now(),

@@ -82,8 +82,8 @@ export class PhysicsEngine {
       // Set up collision event listening for reactive boundaries
       this.setupCollisionEvents();
 
-      // Create the initial ball
-      this.createInitialBall();
+      // Pre-populate the ballQueue instead of creating physics balls
+      this.populateInitialBallQueue();
 
       console.log('Matter.js engine initialized successfully');
       return true;
@@ -211,7 +211,7 @@ export class PhysicsEngine {
 
     this.balls.forEach((ball, index) => {
       const { x, y } = ball.position;
-      const radius = (ball.visualRadius ?? ball.circleRadius) || 28;
+      const radius = (ball.visualRadius ?? ball.circleRadius) || 22;
       const visualState = this.getBallVisualState(ball);
 
       this.ctx.save();
@@ -695,7 +695,7 @@ export class PhysicsEngine {
     try {
       const floorTopY = height; // Floor's top edge aligns with canvas height
       this.balls.forEach(ball => {
-        const radius = ball.circleRadius || 28;
+        const radius = ball.circleRadius || 22;
         const maxAllowedY = floorTopY - radius - 0.5; // small epsilon
         if (ball.position.y > maxAllowedY) {
           Matter.Body.setPosition(ball, { x: ball.position.x, y: maxAllowedY });
@@ -726,7 +726,7 @@ export class PhysicsEngine {
    * Create a physics ball at specified position
    * radius = ball size, x/y = starting position
    */
-  createBall(x, y, radius = 32) {
+  createBall(x, y, radius = 22) {
     try {
       const ball = Matter.Bodies.circle(x, y, radius, {
         // Physical properties that affect how the ball behaves
@@ -757,7 +757,7 @@ export class PhysicsEngine {
   /**
    * Add a ball to the physics world and our tracking array
    */
-  addBall(x, y, radius = 32) {
+  addBall(x, y, radius = 22) {
     const ball = this.createBall(x, y, radius);
 
     if (ball && this.world) {
@@ -775,31 +775,31 @@ export class PhysicsEngine {
   }
 
   /**
-   * Create multiple initial balls in the upper area of the canvas
-   * Using canvas-relative positioning
+   * Pre-populate the ball queue with 12 balls for the gravity chute
+   * This creates ball data (not physics bodies) that will be shown in the chute
    */
-  createInitialBall() {
-    if (!this.canvas) {
-      console.error('Canvas not available for ball creation');
-      return;
-    }
+  populateInitialBallQueue() {
+    console.log('PhysicsEngine: Pre-populating ball queue with 12 balls...');
 
-    const canvasWidth = this.canvas.width;
-    const canvasHeight = this.canvas.height;
+    // Create 12 balls with consistent, small sizes
+    for (let i = 0; i < 24; i++) {
+      const ballData = {
+        radius: 20 + Math.random() * 4, // Vary size (20-24px)
+        color: '#ff6b6b',
+        id: `initial-ball-${i}`,
+        queuedAt: Date.now() + i // Slightly different timestamps
+      };
 
-    // Create multiple balls with slight position variations
-    const numBalls = 5;
-    for (let i = 0; i < numBalls; i++) {
-      const ballX = canvasWidth * (0.82 + i * 0.01); // Spread horizontally from 82% to 86%
-      const ballY = canvasHeight * (0.05 + i * 0.02); // Stagger vertically in upper 15% of canvas
-      const radius = 32 + Math.random() * 8; // Vary size (32-40px)
-
-      const ball = this.addBall(ballX, ballY, radius);
-
-      if (ball) {
-        console.log(`Ball ${i + 1} created at canvas position (${ballX.toFixed(1)}, ${ballY.toFixed(1)}) with radius ${radius.toFixed(1)}`);
+      const success = addBallToQueue(ballData);
+      if (success) {
+        console.log(`Initial ball ${i + 1}/12 added to queue (radius: ${ballData.radius.toFixed(1)}px)`);
+      } else {
+        console.warn(`Failed to add initial ball ${i + 1} to queue - queue may be full`);
+        break;
       }
     }
+
+    console.log('PhysicsEngine: Initial ball queue population complete');
   }
 
   /**
@@ -958,7 +958,7 @@ export class PhysicsEngine {
     this.balls.forEach((ball, ballIndex) => {
       const ballX = ball.position.x;
       const ballY = ball.position.y;
-      const ballRadius = ball.circleRadius || 32;
+      const ballRadius = ball.circleRadius || 22;
 
       // Calculate distance from ball center to drain hole center
       const deltaX = ballX - this.drainHole.centerX;
@@ -997,7 +997,7 @@ export class PhysicsEngine {
     // Start the shrinking/collection process
     if (!this.ballsBeingCollected.has(ball)) {
       this.ballsBeingCollected.set(ball, {
-        originalRadius: ball.circleRadius || 32,
+        originalRadius: ball.circleRadius || 22,
         startTime: Date.now(),
         ballIndex: ballIndex
       });
@@ -1091,7 +1091,7 @@ export class PhysicsEngine {
     try {
       // Prepare ball data for the queue
       const ballData = {
-        radius: ball.circleRadius || 32,
+        radius: ball.circleRadius || 22,
         color: '#ff6b6b',
         originalLabel: ball.label
       };
@@ -1145,14 +1145,15 @@ releaseBallFromChute(ballData) {
 
   // Calculate chute release position (matches GravityChute component positioning)
   const canvasWidth = this.canvas.width;
-  const chuteX = canvasWidth * 0.75; // 75% from left = 25% from right
-  const chuteY = 220; // Just below the chute bottom (200px chute height + 20px top offset)
+  const chuteX = canvasWidth * 0.8; // 80% from left = 20% from right (matches GravityChute)
+  // Chute is positioned with 75% above screen, so visible bottom is at 25% of chute height
+  const chuteY = (400 * 0.25) + 10; // Bottom of visible chute section + small margin
 
   // Create physics ball at chute exit
   const releasedBall = this.createBall(
     chuteX, 
     chuteY, 
-    ballData.radius || 32
+    ballData.radius || 22
   );
 
   if (releasedBall) {

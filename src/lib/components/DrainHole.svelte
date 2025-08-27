@@ -64,7 +64,7 @@
   <!-- Queue status indicator (optional debug info) -->
   {#if queueStatus > 0}
     <div class="queue-indicator">
-      {queueStatus}/3
+      {queueStatus}/12
     </div>
   {/if}
 </div>
