@@ -37,10 +37,10 @@ export class PhysicsEngine {
         positionIterations: 6,    // Default: 6. Higher = better collision detection, lower performance
         velocityIterations: 4,     // Default: 4. Higher = more accurate velocity calculations
         constraintIterations: 2,   // Default: 2. Affects constraint solving accuracy
-        
+
         // Performance and stability settings
         enableSleeping: true,      // Allow inactive bodies to "sleep" for better performance
-        
+
         // Timing configuration for consistent simulation
         timing: {
           timeScale: 1.0,          // Normal speed simulation
@@ -205,12 +205,37 @@ export class PhysicsEngine {
         this.renderBallGlow(x, y, radius);
       }
 
-      // Main ball body - color can vary by state
+      // Get ball color once
       const ballColor = this.getBallColor(visualState);
       this.ctx.fillStyle = ballColor;
+
+      // First shadow (softer, larger, more offset)
+      this.ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+      this.ctx.shadowBlur = 8;
+      this.ctx.shadowOffsetX = 1;
+      this.ctx.shadowOffsetY = 3;
+
+      // Draw ball with first shadow
       this.ctx.beginPath();
       this.ctx.arc(x, y, radius, 0, Math.PI * 2);
       this.ctx.fill();
+
+      // Second shadow (sharper, closer to ball)
+      this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+      this.ctx.shadowBlur = 3;
+      this.ctx.shadowOffsetX = 0;
+      this.ctx.shadowOffsetY = 2;
+
+      // Draw ball with second shadow
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+      this.ctx.fill();
+
+      // Reset shadow properties to prevent affecting other drawings
+      this.ctx.shadowColor = 'transparent';
+      this.ctx.shadowBlur = 0;
+      this.ctx.shadowOffsetX = 0;
+      this.ctx.shadowOffsetY = 0;
 
       // Debug: show ball center and velocity vector if in debug mode
       if (this.debugMode) {
@@ -337,43 +362,6 @@ export class PhysicsEngine {
     );
   }
 
-  /**
-   * Display debug information on canvas
-   */
-  renderDebugInfo() {
-    this.ctx.save();
-    this.ctx.fillStyle = '#ffffff';
-    this.ctx.strokeStyle = '#000000';
-    this.ctx.lineWidth = 1;
-    this.ctx.font = '14px monospace';
-
-    const info = [
-      `Canvas: ${this.canvas.width}x${this.canvas.height}`,
-      `Balls: ${this.balls.length}`,
-      `Boundaries: ${this.boundaries.length}`,
-      `DOM Boundaries: ${this.domBoundaries.length}`,
-      `Gravity: ${this.engine.world.gravity.y}`
-    ];
-
-    // Draw background for text - position relative to viewport, not document
-    const padding = 10;
-    const lineHeight = 18;
-    const textWidth = 200;
-    const textHeight = info.length * lineHeight + padding * 2;
-
-    // Reset transform for viewport-relative positioning of debug info
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    this.ctx.fillRect(10, 10, textWidth, textHeight);
-
-    // Draw text
-    this.ctx.fillStyle = '#ffffff';
-    info.forEach((line, index) => {
-      this.ctx.fillText(line, 20, 30 + index * lineHeight);
-    });
-
-    this.ctx.restore();
-  }
 
   /**
    * Create invisible boundaries around the canvas edges

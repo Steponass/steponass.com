@@ -4,9 +4,8 @@
   // Props for the card
   export let title = "Project Title";
   export let description = "Project description goes here.";
-  export let shape = "rectangle"; // "rectangle" or "square"
+  export let shape = "rectangle"; // "rectangle", "square", or "rotated"
   export let techStack = [];
-
 
   // Get access to physics registration functions from PhysicsAwareSection
   const physicsContext = getContext("physics");
@@ -67,6 +66,7 @@
   class="project-card"
   class:square={shape === "square"}
   class:rectangle={shape === "rectangle"}
+  class:rotated={shape === "rotated"}
   on:click={openProjectDetails}
   role="button"
   tabindex="0"
@@ -104,6 +104,15 @@
 
   .rectangle {
     aspect-ratio: 16 / 9;
+  }
+
+  .rotated {
+    aspect-ratio: 1 / 1;
+  }
+
+  .rotated .card-content {
+    transform: rotate(-45deg);
+    text-align: center;
   }
 
   .card-content {

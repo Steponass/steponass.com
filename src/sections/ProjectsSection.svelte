@@ -11,6 +11,7 @@
       title: "Co~Learn",
       description: "Full-stack project: a virtual classroom",
       techStack: ["React", "Next", "Supabase", "LiveKit"],
+      gridArea: "item1",
     },
     {
       id: 2,
@@ -18,25 +19,30 @@
       description:
         "Storytelling tool that integrates Web Speech Recognition API",
       techStack: ["React", "Tailwind"],
+      gridArea: "item2",
     },
     {
       id: 3,
       title: "RushIQ",
       description: "A corporate website with an AI-enabled chatbot.",
       techStack: ["React", "Tailwind", "Botpress"],
+      gridArea: "item3",
     },
     {
       id: 4,
-      title: "Artist websites",
+      title: "Monochrome & Framing",
       description:
         "2 tailored sites, my early work. Did design & dev + deployment + maintenance",
       techStack: ["JS", "React", "EmailJS", "GSAP"],
+      gridArea: "item4",
     },
     {
       id: 5,
-      title: "Our Project?",
-      description: "…This could be something beautiful!",
-      techStack: ["Framework", "Library", "Database"],
+      title: "Mystify Me",
+      description:
+        "A personal project where I scratched my creative itch while deepening knowledge of React + global state mgmt",
+      techStack: ["React", "Zustand", "GSAP"],
+      gridArea: "item5",
     },
     {
       id: 6,
@@ -44,6 +50,14 @@
       description:
         "A personal project where I scratched my creative itch while deepening knowledge of React + global state mgmt",
       techStack: ["React", "Zustand", "GSAP"],
+      gridArea: "item6",
+    },
+    {
+      id: 7,
+      title: "Our Project?",
+      description: "…This could be something beautiful!",
+      techStack: ["Framework", "Library", "Database"],
+      gridArea: "item7",
     },
   ];
 
@@ -104,78 +118,18 @@
     <h2>Projects</h2>
   </div>
 
-  <div class="projects-grid">
-    <!-- Row 1: rectangle + square -->
-    <div class="project-row">
-      <div class="project-cell rectangle-cell">
+  <div class="container">
+    {#each projects as project}
+      <div class="project-cell" style="grid-area: {project.gridArea}">
         <ProjectCard
-          title={projects[0].title}
-          description={projects[0].description}
-          techStack={projects[0].techStack}
-          shape="rectangle"
-          
+          title={project.title}
+          description={project.description}
+          techStack={project.techStack}
+          shape={project.gridArea === "item7" ? "rotated" : "default"}
           on:openModal={handleOpenModal}
         />
       </div>
-      <div class="project-cell square-cell">
-        <ProjectCard
-          title={projects[1].title}
-          description={projects[1].description}
-          techStack={projects[1].techStack}
-          shape="square"
-          
-          on:openModal={handleOpenModal}
-        />
-      </div>
-    </div>
-
-    <!-- Row 2: square + rectangle -->
-    <div class="project-row">
-      <div class="project-cell square-cell">
-        <ProjectCard
-          title={projects[2].title}
-          description={projects[2].description}
-          techStack={projects[2].techStack}
-          shape="square"
-          
-          on:openModal={handleOpenModal}
-        />
-      </div>
-      <div class="project-cell rectangle-cell">
-        <ProjectCard
-          title={projects[3].title}
-          description={projects[3].description}
-          techStack={projects[3].techStack}
-          shape="rectangle"
-          
-          on:openModal={handleOpenModal}
-        />
-      </div>
-    </div>
-
-    <!-- Row 3: rectangle + square -->
-    <div class="project-row">
-      <div class="project-cell rectangle-cell">
-        <ProjectCard
-          title={projects[4].title}
-          description={projects[4].description}
-          techStack={projects[4].techStack}
-          shape="rectangle"
-          
-          on:openModal={handleOpenModal}
-        />
-      </div>
-      <div class="project-cell square-cell">
-        <ProjectCard
-          title={projects[5].title}
-          description={projects[5].description}
-          techStack={projects[5].techStack}
-          shape="square"
-          
-          on:openModal={handleOpenModal}
-        />
-      </div>
-    </div>
+    {/each}
   </div>
 
   <!-- Placeholder for modal component -->
@@ -201,38 +155,56 @@
     width: 100%;
     padding-inline: 5%;
     border: 2px solid navy;
+    box-sizing: border-box;
   }
 
   .section-title-container {
     width: min(66%, 320px);
     padding-block: var(--space-8-12px);
     border: 1px solid chocolate;
+    margin-bottom: var(--space-32-48px);
   }
 
-  .projects-grid {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 5%;
-  }
-
-  .project-row {
-    display: flex;
-    width: 100%;
-    gap: 5%;
-    margin-bottom: 5%;
+  .container {
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr) minmax(320px, 1fr);
+    grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
+    gap: var(--space-96px);
+    grid-template-areas:
+      "item1 item1 item2"
+      "item3 . item2"
+      "item3 item4 item4"
+      "item5 item5 item7"
+      "item6 item6 item7";
+    min-height: 80vh;
   }
 
   .project-cell {
-    flex-grow: 1;
+    min-height: 200px;
+    display: flex;
   }
 
-  .rectangle-cell {
-    flex-basis: 60%;
+  /* Explicit grid area assignments */
+  .project-cell[style*="item1"] {
+    grid-area: item1;
   }
-
-  .square-cell {
-    flex-basis: 35%;
+  .project-cell[style*="item2"] {
+    grid-area: item2;
+  }
+  .project-cell[style*="item3"] {
+    grid-area: item3;
+  }
+  .project-cell[style*="item4"] {
+    grid-area: item4;
+  }
+  .project-cell[style*="item5"] {
+    grid-area: item5;
+  }
+  .project-cell[style*="item6"] {
+    grid-area: item6;
+  }
+  .project-cell[style*="item7"] {
+    grid-area: item7;
   }
 
   /* Modal placeholder styles - will be replaced with proper modal later */
@@ -270,21 +242,56 @@
     background-color: rgba(0, 0, 0, 0.05);
   }
 
-  /* Responsive layout for smaller screens */
-  @media (max-width: 991px) {
-    .project-row {
-      flex-direction: column;
-      gap: 5vh;
+  /* Tablet breakpoint - 2 column layout */
+  /* @media (max-width: 1200px) and (min-width: 991px) {
+    .container {
+      grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
+      grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
+      grid-template-areas:
+        "item1 item2"
+        "item3 item2"
+        "item3 item4"
+        "item5 item4"
+        "item5 item7"
+        "item6 item7";
+      gap: var(--space-12-16px);
+    }
+  } */
+
+  /* Mobile Layout - Single column with alternating alignment */
+  @media (max-width: 990px) {
+    .container {
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(7, auto);
+      grid-template-areas:
+        "item1"
+        "item2"
+        "item3"
+        "item4"
+        "item5"
+        "item6"
+        "item7";
+      gap: var(--space-24-32px);
+      min-height: auto;
     }
 
     .project-cell {
-      width: 100%;
+      min-height: 150px;
+      justify-self: start;
     }
 
-    /* On mobile, all cells have the same layout */
-    .rectangle-cell,
-    .square-cell {
-      flex-basis: 100%;
+    /* Alternating alignment for mobile */
+    .project-cell:nth-child(odd) {
+      justify-self: start;
+    }
+
+    .project-cell:nth-child(even) {
+      justify-self: end;
+    }
+
+    /* Ensure cards don't exceed container width */
+    .project-cell > :global(*) {
+      max-width: 85%;
     }
   }
 </style>

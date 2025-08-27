@@ -4,7 +4,6 @@
   const physicsContext = getContext("physics");
 
   let heroElement;
-  let launcherElement;
   let registeredBoundary = null;
   let registeredHeroBoundary = null;
   let hasMounted = false;
@@ -16,29 +15,6 @@
     hasMounted = true;
   });
 
-  $: if (hasMounted && launcherElement && $isReady && !registeredBoundary) {
-    console.log(
-      "launcher-container: Physics is ready, attempting boundary registration..."
-    );
-
-    registeredBoundary = physicsContext.registerBoundary(
-      "launcher-container", // unique ID
-      launcherElement, // the DOM element to map
-      {
-        restitution: 0.8, // make it extra bouncy
-        friction: 0.2, // low friction for fun bounces
-        label: "launcher-container", // debug label
-      }
-    );
-
-    if (registeredBoundary) {
-      console.log(
-        "launcher-container: Successfully registered as physics boundary"
-      );
-    } else {
-      console.warn("launcher-container: Failed to register physics boundary");
-    }
-  }
 
   $: if (hasMounted && heroElement && $isReady && !registeredHeroBoundary) {
     console.log(
@@ -68,11 +44,6 @@
     <h1>HEY, I'M STEP,<br />I DO WEB STUFF</h1>
   </div>
 
-  <div bind:this={launcherElement} class="launcher-container">
-    <div class="launcher">
-      <button class="launcher-button"> LAUNCH BALL </button>
-    </div>
-  </div>
 </section>
 
 <style>
@@ -95,31 +66,6 @@
     width: 50%;
     text-align: center;
     border: 2px solid green;
-  }
-
-  .launcher-container {
-    position: absolute;
-    right: 0%;
-    bottom: 2%;
-    width: 10%;
-    aspect-ratio: 1 / 2;
-    border: 2px solid green;
-  }
-
-  .launcher {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    align-items: center;
-  }
-
-  .launcher-button {
-    width: 100%;
-    padding: 5% 10%;
-    border-radius: var(--radius-4px);
-    cursor: pointer;
   }
 
   @media (max-width: 991px) {

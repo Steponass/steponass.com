@@ -100,14 +100,13 @@
     width: 100%;
     padding-inline: 5%;
     position: relative;
-    border: 2px solid navy;
+    border: 2px solid brown;
     padding-bottom: var(--space-64-96px);
   }
 
   .section-title-container {
     width: min(70%, 320px);
     padding-block: var(--space-8-12px);
-    border: 1px solid chocolate;
   }
 
   .cta-container {
