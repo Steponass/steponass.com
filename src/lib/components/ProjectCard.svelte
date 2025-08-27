@@ -1,32 +1,28 @@
 <script>
-  import { onMount, createEventDispatcher, getContext } from "svelte";
+  import { onMount, getContext } from "svelte";
 
-  // Props for the card
   export let title = "Project Title";
   export let description = "Project description goes here.";
-  export let shape = "rectangle"; // "rectangle", "square", or "rotated"
+  export let shape = "rectangle";
   export let techStack = [];
+  export let onOpenModal = null;
 
-  // Get access to physics registration functions from PhysicsAwareSection
   const physicsContext = getContext("physics");
 
-  // For opening the modal
-  const dispatch = createEventDispatcher();
-
-  function openProjectDetails() {
-    dispatch("openModal", {
-      title,
-      description,
-      techStack,
-      // We'll add more details like images when we implement the full modal
-    });
+  function handleCardClick() {
+    if (onOpenModal) {
+      onOpenModal({
+        title,
+        description,
+        techStack,
+      });
+    }
   }
 
   let cardElement;
   let registeredBoundary = null;
   let hasMounted = false;
 
-  // Subscribe to the physics readiness store
   $: isReady = physicsContext?.isPhysicsReady;
 
   onMount(() => {
@@ -35,29 +31,16 @@
 
   // Register card element as physics boundary
   $: if (hasMounted && cardElement && $isReady && !registeredBoundary) {
-    console.log(
-      `ProjectCard "${title}": Physics is ready, attempting boundary registration...`
-    );
 
     registeredBoundary = physicsContext.registerBoundary(
-      `project-card-${title.toLowerCase().replace(/\s+/g, "-")}`, // unique ID based on title
+      `project-card-${title.toLowerCase().replace(/\s+/g, "-")}`,
       cardElement, // the DOM element to map
       {
-        restitution: 0.6, // moderately bouncy
-        friction: 0.3, // low friction for smooth interactions
+        restitution: 0.8, // bouncy
+        friction: 0.2, // low friction
         label: `project-card-${title}`, // debug label
       }
     );
-
-    if (registeredBoundary) {
-      console.log(
-        `ProjectCard "${title}": Successfully registered as physics boundary`
-      );
-    } else {
-      console.warn(
-        `ProjectCard "${title}": Failed to register physics boundary`
-      );
-    }
   }
 </script>
 
@@ -67,10 +50,10 @@
   class:square={shape === "square"}
   class:rectangle={shape === "rectangle"}
   class:rotated={shape === "rotated"}
-  on:click={openProjectDetails}
+  on:click={handleCardClick}
   role="button"
   tabindex="0"
-  on:keydown={(e) => e.key === "Enter" && openProjectDetails()}
+  on:keydown={(e) => e.key === "Enter" && handleCardClick()}
 >
   <div class="card-content">
     <h3>{title}</h3>
@@ -104,10 +87,6 @@
 
   .rectangle {
     aspect-ratio: 16 / 9;
-  }
-
-  .rotated {
-    aspect-ratio: 1 / 1;
   }
 
   .rotated .card-content {

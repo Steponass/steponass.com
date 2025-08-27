@@ -70,11 +70,9 @@
   // Subscribe to the physics readiness store
   $: isReady = physicsContext?.isPhysicsReady;
 
-  function handleOpenModal(event) {
-    activeModal = event.detail;
-    console.log("Modal opened for project:", activeModal.title);
-    // In a future implementation, we would show the actual modal component here
-  }
+  function handleOpenModal(projectData) {
+  activeModal = projectData;
+}
 
   function closeModal() {
     activeModal = null;
@@ -126,7 +124,7 @@
           description={project.description}
           techStack={project.techStack}
           shape={project.gridArea === "item7" ? "rotated" : "default"}
-          on:openModal={handleOpenModal}
+          onOpenModal={handleOpenModal}
         />
       </div>
     {/each}

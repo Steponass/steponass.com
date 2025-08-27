@@ -84,7 +84,6 @@
   .skills-section {
     width: 100%;
     padding-inline: 5%;
-        border: 2px solid brown;
   }
 
   .section-title-container {
@@ -97,8 +96,6 @@
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     grid-template-rows: 1fr 1fr 1fr;
-    gap: 2rem;
-    max-width: 1024px;
     margin: 0 auto;
     aspect-ratio: 1;
   }

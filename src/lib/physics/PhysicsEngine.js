@@ -18,9 +18,9 @@ export class PhysicsEngine {
     this.drainHole = {
       centerX: 0,        // Will be calculated based on canvas width
       centerY: 0,        // Will be calculated based on canvas height  
-      radius: 60,        // Detection radius for ball collection
+      radius: 40,        // Detection radius for ball collection
       visualRadius: 40,  // Visual hole size (smaller than detection)
-      shrinkZone: 70     // Radius where shrinking effect begins
+      shrinkZone: 50     // Radius where shrinking effect begins
     };
 
     this.ballsBeingCollected = new Map();
@@ -189,7 +189,6 @@ export class PhysicsEngine {
         // Draw debug information if enabled
         if (this.debugMode) {
           this.renderDebugBoundaries();
-          this.renderDebugDrainHole();
         }
 
         // Schedule next frame
@@ -818,7 +817,7 @@ export class PhysicsEngine {
     // Create 12 balls with consistent, small sizes
     for (let i = 0; i < 24; i++) {
       const ballData = {
-        radius: 20 + Math.random() * 4, // Vary size (20-24px)
+        radius: 22 + Math.random() * 4, // Vary size (22-26px)
         color: '#ff6b6b',
         id: `initial-ball-${i}`,
         queuedAt: Date.now() + i // Slightly different timestamps
@@ -961,9 +960,9 @@ export class PhysicsEngine {
     const canvasWidth = this.canvas.width;
     const canvasHeight = this.canvas.height;
 
-    // Position drain hole at bottom center of canvas
-    this.drainHole.centerX = canvasWidth / 2;
-    this.drainHole.centerY = canvasHeight - 20; // Slightly above the very bottom
+    // Position drain hole at bottom-left of canvas (horizontal orientation)
+    this.drainHole.centerX = 60; // Half pipe length from left edge (120/2 = 60)
+    this.drainHole.centerY = canvasHeight - 34; // Bottom placement with margin (48/2 + 10 = 34)
 
     this.log(`DrainHole: Updated position to (${this.drainHole.centerX}, ${this.drainHole.centerY})`);
   }
@@ -983,10 +982,6 @@ export class PhysicsEngine {
       return;
     }
 
-    // Log detection area info occasionally
-    if (Math.random() < 0.005) { // 0.5% chance per frame
-      console.log(`DrainHole: Detection active at (${this.drainHole.centerX}, ${this.drainHole.centerY}), checking ${this.balls.length} balls`);
-    }
 
     // Check each active ball
     this.balls.forEach((ball, ballIndex) => {
@@ -1005,14 +1000,8 @@ export class PhysicsEngine {
         return;
       }
 
-      // Log when balls get close (for debugging)
-      if (distance < this.drainHole.shrinkZone * 1.5) { // Slightly larger than shrink zone
-        console.log(`DrainHole: Ball at (${ballX.toFixed(1)}, ${ballY.toFixed(1)}) is ${distance.toFixed(1)}px from drain center`);
-      }
-
       // Check if ball is within the shrink zone
       if (distance < this.drainHole.shrinkZone) {
-        console.log(`DrainHole: Ball entering shrink zone! Distance: ${distance.toFixed(1)}`);
         this.startBallCollection(ball, ballIndex, distance);
       }
     });
@@ -1036,54 +1025,13 @@ export class PhysicsEngine {
         ballIndex: ballIndex
       });
 
-      this.log(`DrainHole: Ball entering collection zone, distance: ${distanceToHole.toFixed(1)}`);
     }
 
     // Update shrinking effect based on distance
     this.updateBallShrinking(ball, distanceToHole);
   }
 
-  /**
-   * Debug method to render drain hole detection area
-   * This helps us see if visual and physics positions match
-   */
-  renderDebugDrainHole() {
-    if (!this.debugMode) return;
 
-    this.ctx.save();
-
-    // Draw the shrink zone (outer circle)
-    this.ctx.strokeStyle = '#ffff00'; // Yellow
-    this.ctx.lineWidth = 2;
-    this.ctx.setLineDash([5, 5]);
-    this.ctx.beginPath();
-    this.ctx.arc(this.drainHole.centerX, this.drainHole.centerY, this.drainHole.shrinkZone, 0, Math.PI * 2);
-    this.ctx.stroke();
-
-    // Draw the collection radius (inner circle)
-    this.ctx.strokeStyle = '#ff0000'; // Red
-    this.ctx.setLineDash([3, 3]);
-    this.ctx.beginPath();
-    this.ctx.arc(this.drainHole.centerX, this.drainHole.centerY, this.drainHole.radius, 0, Math.PI * 2);
-    this.ctx.stroke();
-
-    // Draw center point
-    this.ctx.fillStyle = '#ff0000';
-    this.ctx.beginPath();
-    this.ctx.arc(this.drainHole.centerX, this.drainHole.centerY, 3, 0, Math.PI * 2);
-    this.ctx.fill();
-
-    // Label the drain hole
-    this.ctx.fillStyle = '#000000';
-    this.ctx.font = '14px monospace';
-    this.ctx.fillText(
-      `Drain: (${this.drainHole.centerX.toFixed(0)}, ${this.drainHole.centerY.toFixed(0)})`,
-      this.drainHole.centerX + 50,
-      this.drainHole.centerY
-    );
-
-    this.ctx.restore();
-  }
 
   /**
    * Update ball shrinking effect as it approaches the drain hole
@@ -1146,7 +1094,6 @@ export class PhysicsEngine {
         // Clear any visual state
         this.ballVisualStates.delete(ball);
 
-        this.log(`DrainHole: Ball successfully collected and queued`);
       } else {
         // Queue was full, stop the collection process
         this.ballsBeingCollected.delete(ball);
@@ -1156,7 +1103,6 @@ export class PhysicsEngine {
           delete ball.visualRadius;
         }
 
-        this.log(`DrainHole: Collection failed - queue full, ball returned to physics`);
       }
 
     } catch (error) {
@@ -1173,7 +1119,6 @@ export class PhysicsEngine {
  */
 releaseBallFromChute(ballData) {
   if (!this.canvas || !this.world) {
-    console.error('PhysicsEngine: Cannot release ball - canvas or world not available');
     return null;
   }
 
@@ -1206,13 +1151,10 @@ releaseBallFromChute(ballData) {
     };
 
     Matter.Body.setVelocity(releasedBall, initialVelocity);
-
-    console.log(`PhysicsEngine: Ball released from chute at (${chuteX}, ${chuteY}) with velocity (${randomHorizontal.toFixed(2)}, 1)`);
     
     return releasedBall;
   }
 
-  console.error('PhysicsEngine: Failed to create released ball');
   return null;
 }
 
