@@ -1131,4 +1131,55 @@ export class PhysicsEngine {
     }
   }
 
+
+/**
+ * Release a ball from the gravity chute
+ * Creates a new physics ball at the chute position with initial velocity
+ * @param {Object} ballData - Ball data from the queue
+ */
+releaseBallFromChute(ballData) {
+  if (!this.canvas || !this.world) {
+    console.error('PhysicsEngine: Cannot release ball - canvas or world not available');
+    return null;
+  }
+
+  // Calculate chute release position (matches GravityChute component positioning)
+  const canvasWidth = this.canvas.width;
+  const chuteX = canvasWidth * 0.75; // 75% from left = 25% from right
+  const chuteY = 220; // Just below the chute bottom (200px chute height + 20px top offset)
+
+  // Create physics ball at chute exit
+  const releasedBall = this.createBall(
+    chuteX, 
+    chuteY, 
+    ballData.radius || 32
+  );
+
+  if (releasedBall) {
+    // Add to physics world
+    Matter.World.add(this.world, releasedBall);
+
+    // Add to our tracking array
+    this.balls.push(releasedBall);
+
+    // Give the ball a slight initial velocity for natural release
+    // Small horizontal randomness + gentle downward velocity
+    const randomHorizontal = (Math.random() - 0.5) * 2; // -1 to 1
+    const initialVelocity = {
+      x: randomHorizontal,
+      y: 1 // Gentle downward velocity
+    };
+
+    Matter.Body.setVelocity(releasedBall, initialVelocity);
+
+    console.log(`PhysicsEngine: Ball released from chute at (${chuteX}, ${chuteY}) with velocity (${randomHorizontal.toFixed(2)}, 1)`);
+    
+    return releasedBall;
+  }
+
+  console.error('PhysicsEngine: Failed to create released ball');
+  return null;
+}
+
+
 }

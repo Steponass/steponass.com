@@ -55,8 +55,9 @@ export class BoundaryMapper {
 
     // If this element is already registered, update it instead
     if (this.registeredBoundaries.has(id)) {
-      this.log(`BoundaryMapper: Boundary "${id}" already registered, updating position`);
-      this.updateBoundaryPosition(id, element);
+      this.log(`BoundaryMapper: Boundary "${id}" already registered, updating geometry`);
+      // Ensure both position and size are up to date
+      this.updateBoundaryGeometry(id, element);
       return this.registeredBoundaries.get(id).physicsBody;
     }
 
@@ -84,7 +85,8 @@ export class BoundaryMapper {
         this.registeredBoundaries.set(id, {
           element,
           physicsBody,
-          options: physicsOptions,
+          // Store full options used for body creation including shape
+          options: { ...physicsOptions, shape },
           originalRect: rect,
           boundaryType,
           reactionConfig: boundaryType === 'reactive' ? {
@@ -142,7 +144,7 @@ export class BoundaryMapper {
    */
   updateBoundaryPositions() {
     this.registeredBoundaries.forEach((boundaryInfo, id) => {
-      this.updateBoundaryPosition(id, boundaryInfo.element);
+      this.updateBoundaryGeometry(id, boundaryInfo.element);
     });
   }
 
@@ -159,7 +161,7 @@ export class BoundaryMapper {
       // Get current element position (simplified)
       const rect = this.getElementRect(element);
 
-      // Update physics body position
+      // Update physics body position only (size handled elsewhere)
       const centerX = rect.left + (rect.width / 2);
       const centerY = rect.top + (rect.height / 2);
 
@@ -170,6 +172,54 @@ export class BoundaryMapper {
       }
     } catch (error) {
       console.error(`BoundaryMapper: Failed to update boundary "${id}":`, error);
+    }
+  }
+
+  /**
+   * Ensure both position and size match the element. If width/height changed,
+   * recreate the physics body with new geometry to avoid stale bounds.
+   */
+  updateBoundaryGeometry(id, element) {
+    const info = this.registeredBoundaries.get(id);
+    if (!info) return;
+
+    const prevRect = info.originalRect;
+    const rect = this.getElementRect(element);
+
+    const widthChanged = !prevRect || Math.abs(rect.width - prevRect.width) > 0.5;
+    const heightChanged = !prevRect || Math.abs(rect.height - prevRect.height) > 0.5;
+
+    if (widthChanged || heightChanged) {
+      // Recreate the body with new geometry
+      try {
+        const oldBody = info.physicsBody;
+        const creationOptions = { ...(info.options || {}), label: oldBody?.label };
+        const newBody = this.createPhysicsBody(rect, creationOptions, oldBody?.label);
+
+        if (newBody) {
+          // Replace in world and debug tracking
+          if (this.physicsEngine?.world && oldBody) {
+            Matter.World.remove(this.physicsEngine.world, oldBody);
+            this.physicsEngine.unregisterDomBoundary(oldBody);
+          }
+
+          Matter.World.add(this.physicsEngine.world, newBody);
+          this.physicsEngine.registerDomBoundary(newBody, {
+            id,
+            element,
+            type: 'dom-element'
+          });
+
+          info.physicsBody = newBody;
+          info.originalRect = rect;
+        }
+      } catch (e) {
+        console.error(`BoundaryMapper: Failed to recreate body for "${id}":`, e);
+      }
+    } else {
+      // Size is stable; update position only
+      this.updateBoundaryPosition(id, element);
+      info.originalRect = rect;
     }
   }
 
@@ -237,7 +287,7 @@ export class BoundaryMapper {
     if (!window.ResizeObserver) return;
 
     const observer = new ResizeObserver(() => {
-      this.updateBoundaryPosition(id, element);
+      this.updateBoundaryGeometry(id, element);
     });
 
     observer.observe(element);

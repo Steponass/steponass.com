@@ -26,7 +26,6 @@
     <PhysicsCanvas debug={true} />
     <!-- Temporary interaction switch for debugging -->
 
-
     <PhysicsAwareSection sectionId="hero-section" debug={true}>
       <HeroSection />
     </PhysicsAwareSection>
@@ -42,14 +41,11 @@
     <PhysicsAwareSection sectionId="CTA-section" debug={true}>
       <CallToActionSection />
     </PhysicsAwareSection>
-
   </main>
 
   <PhysicsAwareSection sectionId="CTA-section" debug={true}>
     <Footer />
   </PhysicsAwareSection>
-
-
 {:else}
   <div class="loading">
     <p>Loading...</p>

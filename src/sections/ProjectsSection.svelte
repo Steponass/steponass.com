@@ -118,7 +118,7 @@
     <h2>Projects</h2>
   </div>
 
-  <div class="container">
+  <div class="projects-container">
     {#each projects as project}
       <div class="project-cell" style="grid-area: {project.gridArea}">
         <ProjectCard
@@ -165,9 +165,9 @@
     margin-bottom: var(--space-32-48px);
   }
 
-  .container {
+  .projects-container {
     display: grid;
-    grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr) minmax(320px, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
     gap: var(--space-96px);
     grid-template-areas:
@@ -177,6 +177,8 @@
       "item5 item5 item7"
       "item6 item6 item7";
     min-height: 80vh;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .project-cell {
@@ -243,9 +245,9 @@
   }
 
   /* Tablet breakpoint - 2 column layout */
-  /* @media (max-width: 1200px) and (min-width: 991px) {
-    .container {
-      grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr);
+  @media (max-width: 1200px) and (min-width: 769px) {
+    .projects-container {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
       grid-template-areas:
         "item1 item2"
@@ -254,13 +256,15 @@
         "item5 item4"
         "item5 item7"
         "item6 item7";
-      gap: var(--space-12-16px);
+      gap: 8%;
+      /* Temporary margin for grid testing */
+      margin-bottom: 300px; 
     }
-  } */
+  }
 
   /* Mobile Layout - Single column with alternating alignment */
-  @media (max-width: 990px) {
-    .container {
+  @media (max-width: 768px) {
+    .projects-container {
       grid-template-columns: 1fr;
       grid-template-rows: repeat(7, auto);
       grid-template-areas:
@@ -275,23 +279,17 @@
       min-height: auto;
     }
 
-    .project-cell {
-      min-height: 150px;
-      justify-self: start;
-    }
-
-    /* Alternating alignment for mobile */
-    .project-cell:nth-child(odd) {
-      justify-self: start;
-    }
-
-    .project-cell:nth-child(even) {
-      justify-self: end;
+    /* Ensure all project-card instances are perfect squares and consistent */
+    .project-cell :global(.project-card) {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      height: auto;
+      min-height: 0;
     }
 
     /* Ensure cards don't exceed container width */
     .project-cell > :global(*) {
-      max-width: 85%;
+      max-width: 90%;
     }
   }
 </style>

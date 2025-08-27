@@ -4,6 +4,7 @@
   import { PhysicsEngine } from "@physics/PhysicsEngine.js";
   import { BallHoverDetection } from "@lib/services/BallHoverDetection.js";
   import { BallDragManager } from "@lib/services/BallDragManager.js";
+  import GravityChute from "./GravityChute.svelte";
   import DrainHole from "./DrainHole.svelte";
 
   import {
@@ -287,7 +288,10 @@
   style:pointer-events={$canvasPointerEvents}
 >
 </canvas>
-
+  <GravityChute 
+    {canvasWidth} 
+    {canvasHeight}
+  />
 {#if enabled && canvasWidth > 0 && canvasHeight > 0}
   <DrainHole {canvasWidth} {canvasHeight} />
 {/if}
@@ -314,7 +318,8 @@
     border: 2px dashed red;
   }
 
-  :global(.drain-hole) {
+  :global(.drain-hole),
+  :global(.gravity-chute) {
     position: absolute;
   }
 </style>
