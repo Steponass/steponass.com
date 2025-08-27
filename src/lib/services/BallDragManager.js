@@ -14,11 +14,7 @@ export class BallDragManager {
     this.mouseConstraint = null;
     this.mouse = null;
 
-    // Touch gesture detection state (simplified for now)
-    this.touchStartPosition = null;
-    this.touchStartTime = null;
-    this.touchMoveThreshold = 10;
-    this.touchTimeThreshold = 150;
+    // No custom touch handling
 
     // State tracking
     this.currentDraggedBall = null;
@@ -28,11 +24,13 @@ export class BallDragManager {
     this.debug = physicsEngine?.debugMode || false;
     this.log = this.debug ? console.log : () => { };
 
-    // Bind event handlers
-    this.handleTouchStart = this.handleTouchStart.bind(this);
-    this.handleTouchMove = this.handleTouchMove.bind(this);
-    this.handleTouchEnd = this.handleTouchEnd.bind(this);
+    // No custom touch handling fields
   }
+
+  /**
+   * Enable/disable generic touch event handlers
+   */
+  setEnableTouchHandlers(enable) { }
 
   /**
    * Initialize the drag manager using Matter.js MouseConstraint
@@ -94,9 +92,6 @@ export class BallDragManager {
       // Subscribe to MouseConstraint events for our visual feedback
       this.setupMouseConstraintEvents();
 
-      // Add our simplified touch gesture detection
-      this.setupTouchEventHandlers();
-
       this.log('BallDragManager: Initialization complete');
       return true;
 
@@ -108,7 +103,6 @@ export class BallDragManager {
 
   /**
  * Set up event listeners for Matter.js MouseConstraint events
- * DIAGNOSTIC VERSION - This will show us the actual event structure
  */
   setupMouseConstraintEvents() {
     if (!this.mouseConstraint) {
@@ -118,19 +112,21 @@ export class BallDragManager {
 
     // Listen for drag start with detailed logging
     Matter.Events.on(this.mouseConstraint, 'startdrag', (event) => {
-      this.log('BallDragManager: DIAGNOSTIC - Full startdrag event object:', event);
-      this.log('BallDragManager: DIAGNOSTIC - Event keys:', Object.keys(event));
+      this.log('BallDragManager: startdrag event');
 
       // Try different ways to access the dragged body
       let draggedBody = null;
 
       // Method 1: Direct access (what documentation suggests)
+      // @ts-ignore - event.body exists on Matter event at runtime
       if (event.body) {
+        // @ts-ignore
         draggedBody = event.body;
         this.log('BallDragManager: DIAGNOSTIC - Found body via direct access');
       }
       // Method 2: Through source property
       else if (event.source && event.source.body) {
+        // @ts-ignore
         draggedBody = event.source.body;
         this.log('BallDragManager: DIAGNOSTIC - Found body via source.body');
       }
@@ -164,19 +160,21 @@ export class BallDragManager {
 
     // Listen for drag end with detailed logging
     Matter.Events.on(this.mouseConstraint, 'enddrag', (event) => {
-      this.log('BallDragManager: DIAGNOSTIC - Full enddrag event object:', event);
-      this.log('BallDragManager: DIAGNOSTIC - Event keys:', Object.keys(event));
+      this.log('BallDragManager: enddrag event');
 
       // Try different ways to access the released body
       let releasedBody = null;
 
       // Method 1: Direct access (what documentation suggests)
+      // @ts-ignore - event.body exists on Matter event at runtime
       if (event.body) {
+        // @ts-ignore
         releasedBody = event.body;
         this.log('BallDragManager: DIAGNOSTIC - Found body via direct access');
       }
       // Method 2: Through source property
       else if (event.source && event.source.body) {
+        // @ts-ignore
         releasedBody = event.source.body;
         this.log('BallDragManager: DIAGNOSTIC - Found body via source.body');
       }
@@ -212,79 +210,64 @@ export class BallDragManager {
 
 
 
-  /**
-   * Set up simplified touch gesture detection
-   * This is a basic implementation - we can enhance it later
-   */
-  setupTouchEventHandlers() {
-    if (!this.canvas) return;
+  // Removed touch gesture handlers
 
-    // Add touch event listeners for gesture detection
-    this.canvas.addEventListener('touchstart', this.handleTouchStart, { passive: false });
-    this.canvas.addEventListener('touchmove', this.handleTouchMove, { passive: false });
-    this.canvas.addEventListener('touchend', this.handleTouchEnd, { passive: false });
-    this.canvas.addEventListener('touchcancel', this.handleTouchEnd, { passive: false });
-  }
 
   /**
-   * Simplified touch start handler
+   * Handle ball hit notification from TouchHitDetection
+   * Called when a touch definitely hits a ball
+   * @param {Object} ball - The Matter.js ball that was hit
+   * @param {Object} position - Canvas-relative touch position {x, y}
    */
-  handleTouchStart(event) {
-    if (event.touches.length !== 1) return;
+  handleBallHit(ball, position) {
+    this.log(`BallDragManager: Ball hit detected for ${ball.label || 'unlabeled ball'}`);
 
-    const touch = event.touches[0];
-    const rect = this.canvas.getBoundingClientRect();
-
-    this.touchStartPosition = {
-      x: touch.clientX - rect.left,
-      y: touch.clientY - rect.top
-    };
-    this.touchStartTime = Date.now();
-
-    // For now, we'll let the MouseConstraint handle touch events naturally
-    // This is a simplified approach - we can enhance gesture detection later
-  }
-
-  /**
-   * Simplified touch move handler
-   */
-  handleTouchMove(event) {
-    if (!this.touchStartPosition || event.touches.length !== 1) return;
-
-    const touch = event.touches[0];
-    const rect = this.canvas.getBoundingClientRect();
-    const currentPos = {
-      x: touch.clientX - rect.left,
-      y: touch.clientY - rect.top
-    };
-
-    // Basic gesture analysis
-    const deltaX = currentPos.x - this.touchStartPosition.x;
-    const deltaY = currentPos.y - this.touchStartPosition.y;
-    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-
-    // If user is moving significantly and we detect likely drag intent,
-    // prevent default to stop scrolling
-    if (distance > this.touchMoveThreshold) {
-      const isMoreVertical = Math.abs(deltaY) > Math.abs(deltaX) * 1.5;
-
-      // If movement is not primarily vertical (which would suggest scrolling),
-      // assume drag intent and prevent scrolling
-      if (!isMoreVertical) {
-        event.preventDefault();
-        this.dragMode = 'touch';
-      }
+    // Set visual feedback immediately
+    if (this.physicsEngine && typeof this.physicsEngine.setBallVisualState === 'function') {
+      this.physicsEngine.setBallVisualState(ball, 'dragged');
     }
+
+    // Track the ball we're dragging
+    this.currentDraggedBall = ball;
+    this.dragMode = 'touch-hit';
+
+    // Set cursor feedback for touch devices (some support it)
+    if (document && document.body) {
+      document.body.style.cursor = 'grabbing';
+    }
+
+    this.log(`BallDragManager: Ball ${ball.label} ready for dragging`);
+
+    // Manual touch drag removed
   }
 
   /**
-   * Simplified touch end handler
+   * Handle touch end notification from TouchHitDetection
+   * Called when the touch that hit a ball ends
+   * @param {Object} ball - The Matter.js ball that was being touched
    */
-  handleTouchEnd(event) {
-    // Reset touch tracking
-    this.touchStartPosition = null;
-    this.touchStartTime = null;
+  handleTouchEnd(ball) {
+    this.log(`BallDragManager: Touch ended for ${ball.label || 'unlabeled ball'}`);
+
+    // Clear visual feedback
+    if (this.physicsEngine && typeof this.physicsEngine.clearBallVisualState === 'function') {
+      this.physicsEngine.clearBallVisualState(ball);
+    }
+
+    // Reset cursor
+    if (document && document.body) {
+      document.body.style.cursor = 'default';
+    }
+
+    // Clear tracking state
+    this.currentDraggedBall = null;
+    this.dragMode = null;
+
+    this.log('BallDragManager: Touch drag session ended');
+
+    // No manual constraint used
   }
+
 
   /**
    * Clean up all event listeners and constraints
@@ -292,13 +275,7 @@ export class BallDragManager {
   stop() {
     this.log('BallDragManager: Stopping drag manager');
 
-    // Remove touch event listeners
-    if (this.canvas) {
-      this.canvas.removeEventListener('touchstart', this.handleTouchStart);
-      this.canvas.removeEventListener('touchmove', this.handleTouchMove);
-      this.canvas.removeEventListener('touchend', this.handleTouchEnd);
-      this.canvas.removeEventListener('touchcancel', this.handleTouchEnd);
-    }
+    // No touch listeners to remove
 
     // Remove MouseConstraint from physics world
     if (this.mouseConstraint && this.physicsEngine && this.physicsEngine.world) {
@@ -315,4 +292,15 @@ export class BallDragManager {
     this.mouseConstraint = null;
     this.mouse = null;
   }
+
+  /**
+   * Matter.js mobile touch handling fix, adapted from
+   * https://github.com/liabru/matter-js/issues/678 (Striffly, Jan 4, 2023)
+   */
+  // Removed touch override fix
+
+  /**
+   * Create a soft constraint from the ball to the touch point
+   */
+  // Removed manual touch drag helpers
 }

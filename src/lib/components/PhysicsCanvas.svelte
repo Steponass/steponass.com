@@ -4,10 +4,7 @@
   import { PhysicsEngine } from "@physics/PhysicsEngine.js";
   import { BallHoverDetection } from "@lib/services/BallHoverDetection.js";
   import { BallDragManager } from "@lib/services/BallDragManager.js";
-  import {
-    detectPrimaryInputMethod,
-    getDeviceCapabilities,
-  } from "@utils/deviceDetection.js";
+  import DrainHole from "./DrainHole.svelte";
 
   import {
     canvasPointerEvents,
@@ -15,6 +12,9 @@
     enableNormalBrowsing,
   } from "@stores/interaction.js";
   import { physicsEngine, physicsEnabled } from "@stores/physics.js";
+
+  // Diagnostics: confirm module load
+  console.log("PhysicsCanvas: module loaded");
 
   export let debug = false;
   export let enabled = true;
@@ -24,9 +24,23 @@
   let engine;
   let hoverDetection;
   let dragManager;
+  let touchHitDetection;
+  let canvasWidth = 0;
+  let canvasHeight = 0;
+  let scrollTimeout;
 
   onMount(() => {
-    console.log("PhysicsCanvas: Starting initialization...");
+    console.log("PhysicsCanvas: Starting initialization (onMount entered)...");
+
+    // Disable canvas interaction during scroll to allow smooth scrolling
+    const handleScroll = () => {
+      canvasPointerEvents.set("none");
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => {
+        canvasPointerEvents.set("auto");
+      }, 200);
+    };
+    window.addEventListener("wheel", handleScroll, { passive: true });
 
     // Step 1: Initialize CanvasManager first (handles sizing)
     canvasManager = new CanvasManager(canvasElement, {
@@ -48,6 +62,8 @@
     return () => {
       console.log("PhysicsCanvas: Cleaning up...");
 
+      // TouchHitDetection removed
+
       // Clean up drag manager first (it depends on physics engine)
       if (dragManager) {
         dragManager.stop();
@@ -68,6 +84,15 @@
       // Clean up canvas manager last (lowest level dependency)
       if (canvasManager) {
         canvasManager.stopWatching();
+      }
+
+      // Clean up scroll handler and timeout
+      try {
+        window.removeEventListener("wheel", handleScroll);
+      } catch {}
+      if (scrollTimeout) {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = null;
       }
     };
   });
@@ -111,15 +136,18 @@
         physicsEngine.set(engine);
         physicsEnabled.set(true);
 
+        canvasWidth = canvasElement.width;
+        canvasHeight = canvasElement.height;
+
         // Set up canvas resize handler for physics
         setupPhysicsResizeHandler();
 
         // Initialize interaction systems in dependency order
-        // Hover detection first (foundational interaction layer)
-        initializeHoverDetection();
-
-        // Drag management second (builds upon hover detection concepts)
+        // Drag manager first
         initializeDragManager();
+
+        // Hover detection next
+        initializeHoverDetection();
       } else {
         console.error("PhysicsCanvas: Failed to initialize physics engine");
       }
@@ -133,13 +161,10 @@
 
   /**
    * Initialize the hover detection service after physics engine is ready
-   * This creates the bridge between mouse events and automatic interaction mode switching
    */
-  /**
-   * Initialize the hover detection service after physics engine is ready
-   * Now includes intelligent device detection to avoid conflicts on touch devices
-   */
+
   function initializeHoverDetection() {
+    console.log("PhysicsCanvas: initializeHoverDetection called");
     if (!engine) {
       console.warn(
         "PhysicsCanvas: Cannot initialize hover detection without physics engine"
@@ -147,33 +172,8 @@
       return;
     }
 
-    // Get comprehensive device information for debugging and decision making
-    const deviceCapabilities = getDeviceCapabilities();
-    console.log(
-      "PhysicsCanvas: Device capabilities analysis:",
-      deviceCapabilities
-    );
-
-    // Extract the primary input method for our decision logic
-    const inputMethod = deviceCapabilities.primaryInputMethod;
-
-    // Only initialize hover detection for devices where it enhances the experience
-    if (inputMethod === "touch-primary") {
-      console.log(
-        "PhysicsCanvas: Touch-primary device detected - hover detection disabled"
-      );
-      console.log(
-        "PhysicsCanvas: Users will interact directly with balls via drag gestures"
-      );
-      // Ensure the canvas receives pointer/touch events for dragging
-      enableBallInteraction();
-      return; // Early return - don't initialize hover detection
-    }
-
-    // Log the decision for debugging
-    console.log(
-      `PhysicsCanvas: Initializing hover detection for ${inputMethod} device`
-    );
+    // Initialize hover detection (uniform behavior)
+    console.log("PhysicsCanvas: Initializing hover detection");
 
     try {
       // Create the interaction store interface that our service needs
@@ -188,9 +188,7 @@
       // Start the hover detection system
       hoverDetection.start();
 
-      console.log(
-        `PhysicsCanvas: Hover detection active for ${inputMethod} device`
-      );
+      console.log("PhysicsCanvas: Hover detection active");
     } catch (error) {
       console.error(
         "PhysicsCanvas: Failed to initialize hover detection:",
@@ -198,6 +196,8 @@
       );
     }
   }
+
+  // TouchHitDetection removed in favor of Matter.js touch handling fix in BallDragManager
 
   /**
    * Initialize the ball drag manager after physics engine is ready
@@ -214,6 +214,8 @@
     try {
       // Create the drag manager with references to physics engine and canvas
       dragManager = new BallDragManager(engine, canvasElement);
+
+      // No device detection: drag manager handles both mouse and touch fix internally
 
       // Start the drag manager service
       const success = dragManager.start();
@@ -246,7 +248,17 @@
         console.log(
           "PhysicsCanvas: Canvas size changed, updating physics boundaries"
         );
+
+        // Update physics boundaries
         engine.updateBoundaries();
+
+        // NEW: Update our canvas dimension tracking for DrainHole
+        canvasWidth = canvasElement.width;
+        canvasHeight = canvasElement.height;
+
+        console.log(
+          `PhysicsCanvas: Canvas dimensions updated to ${canvasWidth}x${canvasHeight}`
+        );
       }
 
       return sizeChanged;
@@ -276,6 +288,10 @@
 >
 </canvas>
 
+{#if enabled && canvasWidth > 0 && canvasHeight > 0}
+  <DrainHole {canvasWidth} {canvasHeight} />
+{/if}
+
 <style>
   .physics-canvas {
     position: absolute;
@@ -296,5 +312,9 @@
     /* Semi-transparent background to visualize canvas bounds */
     background-color: rgba(255, 0, 0, 0.1);
     border: 2px dashed red;
+  }
+
+  :global(.drain-hole) {
+    position: absolute;
   }
 </style>

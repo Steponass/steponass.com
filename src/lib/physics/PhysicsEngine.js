@@ -1,4 +1,6 @@
 import Matter from 'matter-js';
+import { addBallToQueue, canCollectBalls } from '@stores/ballQueue.js';
+import { get } from 'svelte/store';
 
 export class PhysicsEngine {
   constructor(canvas) {
@@ -13,6 +15,15 @@ export class PhysicsEngine {
     this.balls = [];
     this.ballVisualStates = new Map();
 
+    this.drainHole = {
+      centerX: 0,        // Will be calculated based on canvas width
+      centerY: 0,        // Will be calculated based on canvas height  
+      radius: 60,        // Detection radius for ball collection
+      visualRadius: 40,  // Visual hole size (smaller than detection)
+      shrinkZone: 70     // Radius where shrinking effect begins
+    };
+
+    this.ballsBeingCollected = new Map();
 
     this.domBoundaries = []; // Track DOM-derived boundaries separately from viewport boundaries
     this.boundaryMappers = []; // Track all boundary mappers using this engine
@@ -65,6 +76,8 @@ export class PhysicsEngine {
 
       // Create boundaries around the canvas edges
       this.createViewportBoundaries();
+
+      this.updateDrainHolePosition();
 
       // Set up collision event listening for reactive boundaries
       this.setupCollisionEvents();
@@ -162,13 +175,17 @@ export class PhysicsEngine {
         // Clear the entire canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+
+        this.checkBallCollection();
+
         // Draw all the physics objects (no coordinate translation needed)
         this.renderBalls();
+
 
         // Draw debug information if enabled
         if (this.debugMode) {
           this.renderDebugBoundaries();
-          this.renderDebugInfo();
+          this.renderDebugDrainHole();
         }
 
         // Schedule next frame
@@ -194,7 +211,7 @@ export class PhysicsEngine {
 
     this.balls.forEach((ball, index) => {
       const { x, y } = ball.position;
-      const radius = ball.circleRadius || 28;
+      const radius = (ball.visualRadius ?? ball.circleRadius) || 28;
       const visualState = this.getBallVisualState(ball);
 
       this.ctx.save();
@@ -671,6 +688,9 @@ export class PhysicsEngine {
     // Update tracking array
     this.boundaries = newBoundaries.filter(b => b !== null);
 
+    //  Update drain hole position for new canvas size
+    this.updateDrainHolePosition();
+
     // Ensure balls are not below the new floor after rapid viewport changes
     try {
       const floorTopY = height; // Floor's top edge aligns with canvas height
@@ -896,5 +916,219 @@ export class PhysicsEngine {
     });
   }
 
+
+  /**
+   * Update drain hole position based on current canvas size
+   * Called during initialization and canvas resize
+   */
+  updateDrainHolePosition() {
+    if (!this.canvas) return;
+
+    const canvasWidth = this.canvas.width;
+    const canvasHeight = this.canvas.height;
+
+    // Position drain hole at bottom center of canvas
+    this.drainHole.centerX = canvasWidth / 2;
+    this.drainHole.centerY = canvasHeight - 20; // Slightly above the very bottom
+
+    this.log(`DrainHole: Updated position to (${this.drainHole.centerX}, ${this.drainHole.centerY})`);
+  }
+
+  /**
+   * Check all balls for drain hole collection
+   * Called every frame during render loop
+   */
+  checkBallCollection() {
+    // Only collect if queue has space
+    const canCollect = get(canCollectBalls);
+    if (!canCollect) {
+      // Only log this occasionally to avoid spam
+      if (Math.random() < 0.01) { // 1% chance per frame
+        console.log('DrainHole: Queue full, not collecting balls');
+      }
+      return;
+    }
+
+    // Log detection area info occasionally
+    if (Math.random() < 0.005) { // 0.5% chance per frame
+      console.log(`DrainHole: Detection active at (${this.drainHole.centerX}, ${this.drainHole.centerY}), checking ${this.balls.length} balls`);
+    }
+
+    // Check each active ball
+    this.balls.forEach((ball, ballIndex) => {
+      const ballX = ball.position.x;
+      const ballY = ball.position.y;
+      const ballRadius = ball.circleRadius || 32;
+
+      // Calculate distance from ball center to drain hole center
+      const deltaX = ballX - this.drainHole.centerX;
+      const deltaY = ballY - this.drainHole.centerY;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      // If this ball is already being collected, continue shrinking it every frame
+      if (this.ballsBeingCollected.has(ball)) {
+        this.updateBallShrinking(ball, distance);
+        return;
+      }
+
+      // Log when balls get close (for debugging)
+      if (distance < this.drainHole.shrinkZone * 1.5) { // Slightly larger than shrink zone
+        console.log(`DrainHole: Ball at (${ballX.toFixed(1)}, ${ballY.toFixed(1)}) is ${distance.toFixed(1)}px from drain center`);
+      }
+
+      // Check if ball is within the shrink zone
+      if (distance < this.drainHole.shrinkZone) {
+        console.log(`DrainHole: Ball entering shrink zone! Distance: ${distance.toFixed(1)}`);
+        this.startBallCollection(ball, ballIndex, distance);
+      }
+    });
+  }
+
+  /**
+   * Start the collection process for a ball that entered the drain area
+   */
+  startBallCollection(ball, ballIndex, distanceToHole) {
+    // If ball is very close to center, collect it immediately
+    if (distanceToHole < this.drainHole.radius) {
+      this.collectBall(ball, ballIndex);
+      return;
+    }
+
+    // Start the shrinking/collection process
+    if (!this.ballsBeingCollected.has(ball)) {
+      this.ballsBeingCollected.set(ball, {
+        originalRadius: ball.circleRadius || 32,
+        startTime: Date.now(),
+        ballIndex: ballIndex
+      });
+
+      this.log(`DrainHole: Ball entering collection zone, distance: ${distanceToHole.toFixed(1)}`);
+    }
+
+    // Update shrinking effect based on distance
+    this.updateBallShrinking(ball, distanceToHole);
+  }
+
+  /**
+   * Debug method to render drain hole detection area
+   * This helps us see if visual and physics positions match
+   */
+  renderDebugDrainHole() {
+    if (!this.debugMode) return;
+
+    this.ctx.save();
+
+    // Draw the shrink zone (outer circle)
+    this.ctx.strokeStyle = '#ffff00'; // Yellow
+    this.ctx.lineWidth = 2;
+    this.ctx.setLineDash([5, 5]);
+    this.ctx.beginPath();
+    this.ctx.arc(this.drainHole.centerX, this.drainHole.centerY, this.drainHole.shrinkZone, 0, Math.PI * 2);
+    this.ctx.stroke();
+
+    // Draw the collection radius (inner circle)
+    this.ctx.strokeStyle = '#ff0000'; // Red
+    this.ctx.setLineDash([3, 3]);
+    this.ctx.beginPath();
+    this.ctx.arc(this.drainHole.centerX, this.drainHole.centerY, this.drainHole.radius, 0, Math.PI * 2);
+    this.ctx.stroke();
+
+    // Draw center point
+    this.ctx.fillStyle = '#ff0000';
+    this.ctx.beginPath();
+    this.ctx.arc(this.drainHole.centerX, this.drainHole.centerY, 3, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    // Label the drain hole
+    this.ctx.fillStyle = '#000000';
+    this.ctx.font = '14px monospace';
+    this.ctx.fillText(
+      `Drain: (${this.drainHole.centerX.toFixed(0)}, ${this.drainHole.centerY.toFixed(0)})`,
+      this.drainHole.centerX + 50,
+      this.drainHole.centerY
+    );
+
+    this.ctx.restore();
+  }
+
+  /**
+   * Update ball shrinking effect as it approaches the drain hole
+   */
+  updateBallShrinking(ball, distanceToHole) {
+    const collectionData = this.ballsBeingCollected.get(ball);
+    if (!collectionData) return;
+
+    const originalRadius = collectionData.originalRadius;
+    const shrinkZone = this.drainHole.shrinkZone;
+    const collectRadius = this.drainHole.radius;
+
+    // Calculate shrink factor based on distance (1.0 = full size, 0.0 = invisible)
+    let shrinkFactor = 1.0;
+
+    if (distanceToHole < collectRadius) {
+      // Very close to center - shrink rapidly to 0
+      shrinkFactor = 0.1;
+    } else if (distanceToHole < shrinkZone) {
+      // In shrink zone - gradual shrinking
+      shrinkFactor = (distanceToHole - collectRadius) / (shrinkZone - collectRadius);
+      shrinkFactor = Math.max(0.1, Math.min(1.0, shrinkFactor));
+    }
+
+    // Apply the shrinking effect to the ball's visual radius
+    ball.visualRadius = originalRadius * shrinkFactor;
+
+    // If ball shrunk enough or close enough, collect it
+    if (shrinkFactor <= 0.2 || distanceToHole < this.drainHole.radius) {
+      const ballIndex = this.balls.indexOf(ball);
+      this.collectBall(ball, ballIndex);
+    }
+  }
+
+  /**
+   * Finalize ball collection - remove from physics and add to queue
+   */
+  collectBall(ball, ballIndex) {
+    try {
+      // Prepare ball data for the queue
+      const ballData = {
+        radius: ball.circleRadius || 32,
+        color: '#ff6b6b',
+        originalLabel: ball.label
+      };
+
+      // Add to queue
+      const success = addBallToQueue(ballData);
+
+      if (success) {
+        // Remove from physics world
+        if (this.world && ball) {
+          Matter.World.remove(this.world, ball);
+        }
+
+        // Remove from our tracking arrays
+        this.balls.splice(ballIndex, 1);
+        this.ballsBeingCollected.delete(ball);
+
+        // Clear any visual state
+        this.ballVisualStates.delete(ball);
+
+        this.log(`DrainHole: Ball successfully collected and queued`);
+      } else {
+        // Queue was full, stop the collection process
+        this.ballsBeingCollected.delete(ball);
+
+        // Reset visual radius
+        if (ball.visualRadius !== undefined) {
+          delete ball.visualRadius;
+        }
+
+        this.log(`DrainHole: Collection failed - queue full, ball returned to physics`);
+      }
+
+    } catch (error) {
+      console.error('DrainHole: Error collecting ball:', error);
+      this.ballsBeingCollected.delete(ball);
+    }
+  }
 
 }
