@@ -68,7 +68,7 @@
     }
     &:focus-visible {
       outline: 2px solid var(--clr-primary);
-    } 
+    }
   }
 
   .toggle-icon {
@@ -88,12 +88,17 @@
     top: 0;
     left: 0;
     opacity: 0;
-    transform: rotate(-180deg) scale(0.3);
+    --icon-scale: 1;
+    transform: rotate(-180deg) scale(calc(0.3 * var(--icon-scale)));
     transition: all 0.3s ease-in-out;
   }
 
   .icon.visible {
     opacity: 1;
-    transform: rotate(0deg) scale(1);
+    transform: rotate(0deg) scale(var(--icon-scale));
+  }
+
+  .sun-icon {
+    --icon-scale: 1.2;
   }
 </style>

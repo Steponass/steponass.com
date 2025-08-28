@@ -1,13 +1,11 @@
 <script>
-  import { onMount, getContext } from "svelte";
-
+  import { physicsRegister } from "@lib/actions/physicsRegister.js";
+  
   export let title = "Project Title";
   export let description = "Project description goes here.";
   export let shape = "rectangle";
   export let techStack = [];
   export let onOpenModal = null;
-
-  const physicsContext = getContext("physics");
 
   function handleCardClick() {
     if (onOpenModal) {
@@ -19,37 +17,18 @@
     }
   }
 
-  let cardElement;
-  let registeredBoundary = null;
-  let hasMounted = false;
-
-  $: isReady = physicsContext?.isPhysicsReady;
-
-  onMount(() => {
-    hasMounted = true;
-  });
-
-  // Register card element as physics boundary
-  $: if (hasMounted && cardElement && $isReady && !registeredBoundary) {
-
-    registeredBoundary = physicsContext.registerBoundary(
-      `project-card-${title.toLowerCase().replace(/\s+/g, "-")}`,
-      cardElement, // the DOM element to map
-      {
-        restitution: 0.8, // bouncy
-        friction: 0.2, // low friction
-        label: `project-card-${title}`, // debug label
-      }
-    );
-  }
 </script>
 
 <div
-  bind:this={cardElement}
   class="project-card"
   class:square={shape === "square"}
   class:rectangle={shape === "rectangle"}
   class:rotated={shape === "rotated"}
+  use:physicsRegister={{
+    restitution: 0.8,
+    friction: 0.2,
+    label: "project-card",
+  }}
   on:click={handleCardClick}
   role="button"
   tabindex="0"

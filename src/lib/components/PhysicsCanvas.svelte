@@ -1,6 +1,7 @@
 <script>
   import { onMount } from "svelte";
   import { CanvasManager } from "@physics/CanvasManager.js";
+  import { BoundaryMapper } from '@physics/BoundaryMapper.js';
   import { PhysicsEngine } from "@physics/PhysicsEngine.js";
   import { BallHoverDetection } from "@lib/services/BallHoverDetection.js";
   import { BallDragManager } from "@lib/services/BallDragManager.js";
@@ -88,6 +89,12 @@
       // Initialize the physics world
       if (engine.init()) {
         engine.start();
+
+      const globalMapper = new BoundaryMapper(engine);
+      globalMapper.debug = debug;
+      
+      // Register it with the engine (this makes boundaryMappers[0] available)
+      engine.registerBoundaryMapper(globalMapper);
 
         // Update the physics store so other components can access it
         physicsEngine.set(engine);

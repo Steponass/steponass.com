@@ -1,59 +1,15 @@
 <script>
-  import { onMount, getContext } from "svelte";
   import ThemeToggle from "@/lib/components/ThemeToggle.svelte";
-
-  // Get access to physics registration functions from PhysicsAwareSection
-  const physicsContext = getContext("physics");
-
-  let headerElement;
-  let signElement;
-  let registeredBoundary = null;
-  let hasMounted = false;
-
-  // Subscribe to the physics readiness store
-  $: isReady = physicsContext?.isPhysicsReady;
-
-  onMount(() => {
-    hasMounted = true;
-  });
-
-  // Reactive statement - now listens to the store value
-  $: if (hasMounted && signElement && $isReady && !registeredBoundary) {
-    console.log(
-      "Header: Physics is ready, attempting boundary registration..."
-    );
-
-    registeredBoundary = physicsContext.registerBoundary(
-      "navigation-header", // unique ID
-      signElement, // the DOM element to map
-      {
-        restitution: 0.8, // make it extra bouncy
-        friction: 0.2, // low friction for fun bounces
-        label: "nav-header", // debug label
-      }
-    );
-
-    if (registeredBoundary) {
-      console.log("Header: Successfully registered as physics boundary");
-      
-        // Debug the alignment
-      setTimeout(() => {
-    physicsContext.registerBoundary.__mapper?.debugCoordinateAlignment('navigation-header');
-  }, 100);
-    } else {
-      console.warn("Header: Failed to register physics boundary");
-    }
-  }
 </script>
 
-<header bind:this={headerElement} class="hanging-header">
+<header class="hanging-header">
   <div class="suspension-system">
     <div class="string left-string"></div>
     <div class="string right-string"></div>
   </div>
 
   <!-- The actual sign that acts as a physics boundary -->
-  <nav bind:this={signElement} class="sign-board">
+  <nav class="sign-board">
     <ul class="nav-links">
       <li><a href="#projects">Projects</a></li>
       <li><a href="#skills">Skills</a></li>
@@ -62,7 +18,6 @@
     </ul>
     <ThemeToggle />
   </nav>
-
 </header>
 
 <style>

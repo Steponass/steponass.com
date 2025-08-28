@@ -48,6 +48,10 @@
   font-weight: 400;
 }
 
+button {
+  font-weight: 550;
+}
+
 :where(h6, h5, h4, h3, h2, h1) {
   line-height: 1.2;
 }

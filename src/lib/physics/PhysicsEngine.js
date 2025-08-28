@@ -18,9 +18,9 @@ export class PhysicsEngine {
     this.drainHole = {
       centerX: 0,        // Will be calculated based on canvas width
       centerY: 0,        // Will be calculated based on canvas height  
-      radius: 40,        // Detection radius for ball collection
-      visualRadius: 40,  // Visual hole size (smaller than detection)
-      shrinkZone: 50     // Radius where shrinking effect begins
+      radius: 15,        // Detection radius for ball collection (smaller = disappears closer)
+      visualRadius: 12,  // Visual hole size (smaller than detection)
+      shrinkZone: 30     // Radius where shrinking effect begins (just outside the hole)
     };
 
     this.ballsBeingCollected = new Map();
@@ -703,31 +703,31 @@ export class PhysicsEngine {
       if (this.previousCanvasWidth > 0 && this.previousCanvasHeight > 0) {
         const scaleX = width / this.previousCanvasWidth;
         const scaleY = height / this.previousCanvasHeight;
-        
+
         console.log(`Scaling balls: ${this.previousCanvasWidth}x${this.previousCanvasHeight} → ${width}x${height} (scale: ${scaleX.toFixed(3)}x, ${scaleY.toFixed(3)}y)`);
-        
+
         this.balls.forEach(ball => {
           const currentX = ball.position.x;
           const currentY = ball.position.y;
-          
+
           // Calculate new position with proportional scaling
           const newX = currentX * scaleX;
           const newY = currentY * scaleY;
-          
+
           // Ensure ball stays within canvas bounds
           const radius = ball.circleRadius || 22;
           const clampedX = Math.max(radius, Math.min(width - radius, newX));
           const clampedY = Math.max(radius, Math.min(height - radius, newY));
-          
+
           // Update ball position
           Matter.Body.setPosition(ball, { x: clampedX, y: clampedY });
-          
+
           // Scale velocity proportionally to maintain physics behavior
           const currentVel = ball.velocity;
           const scaledVelX = currentVel.x * scaleX;
           const scaledVelY = currentVel.y * scaleY;
           Matter.Body.setVelocity(ball, { x: scaledVelX, y: scaledVelY });
-          
+
           console.log(`Ball repositioned: (${currentX.toFixed(1)}, ${currentY.toFixed(1)}) → (${clampedX.toFixed(1)}, ${clampedY.toFixed(1)})`);
         });
       } else {
@@ -1112,51 +1112,51 @@ export class PhysicsEngine {
   }
 
 
-/**
- * Release a ball from the gravity chute
- * Creates a new physics ball at the chute position with initial velocity
- * @param {Object} ballData - Ball data from the queue
- */
-releaseBallFromChute(ballData) {
-  if (!this.canvas || !this.world) {
+  /**
+   * Release a ball from the gravity chute
+   * Creates a new physics ball at the chute position with initial velocity
+   * @param {Object} ballData - Ball data from the queue
+   */
+  releaseBallFromChute(ballData) {
+    if (!this.canvas || !this.world) {
+      return null;
+    }
+
+    // Calculate chute release position (matches GravityChute component positioning)
+    const canvasWidth = this.canvas.width;
+    const chuteX = canvasWidth * 0.8; // 80% from left = 20% from right (matches GravityChute)
+    // Chute is positioned with 75% above screen, so visible bottom is at 25% of chute height
+    const chuteY = (400 * 0.25) + 10; // Bottom of visible chute section + small margin
+
+    // Create physics ball at chute exit
+    const releasedBall = this.createBall(
+      chuteX,
+      chuteY,
+      ballData.radius || 22
+    );
+
+    if (releasedBall) {
+      // Add to physics world
+      Matter.World.add(this.world, releasedBall);
+
+      // Add to our tracking array
+      this.balls.push(releasedBall);
+
+      // Give the ball a slight initial velocity for natural release
+      // Small horizontal randomness + gentle downward velocity
+      const randomHorizontal = (Math.random() - 0.5) * 2; // -1 to 1
+      const initialVelocity = {
+        x: randomHorizontal,
+        y: 1 // Gentle downward velocity
+      };
+
+      Matter.Body.setVelocity(releasedBall, initialVelocity);
+
+      return releasedBall;
+    }
+
     return null;
   }
-
-  // Calculate chute release position (matches GravityChute component positioning)
-  const canvasWidth = this.canvas.width;
-  const chuteX = canvasWidth * 0.8; // 80% from left = 20% from right (matches GravityChute)
-  // Chute is positioned with 75% above screen, so visible bottom is at 25% of chute height
-  const chuteY = (400 * 0.25) + 10; // Bottom of visible chute section + small margin
-
-  // Create physics ball at chute exit
-  const releasedBall = this.createBall(
-    chuteX, 
-    chuteY, 
-    ballData.radius || 22
-  );
-
-  if (releasedBall) {
-    // Add to physics world
-    Matter.World.add(this.world, releasedBall);
-
-    // Add to our tracking array
-    this.balls.push(releasedBall);
-
-    // Give the ball a slight initial velocity for natural release
-    // Small horizontal randomness + gentle downward velocity
-    const randomHorizontal = (Math.random() - 0.5) * 2; // -1 to 1
-    const initialVelocity = {
-      x: randomHorizontal,
-      y: 1 // Gentle downward velocity
-    };
-
-    Matter.Body.setVelocity(releasedBall, initialVelocity);
-    
-    return releasedBall;
-  }
-
-  return null;
-}
 
 
 }

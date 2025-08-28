@@ -1,119 +1,30 @@
 <script>
-  import { onMount, getContext } from "svelte";
-  import ProjectCard from "@components/ProjectCard.svelte";
+    import { projects } from "@lib/data/projectsData.js";
+  import ProjectCard from "@/lib/components/ProjectCard.svelte";
+  import { physicsRegister } from "@lib/actions/physicsRegister.js";
 
-  // Get access to physics registration functions from PhysicsAwareSection
-  const physicsContext = getContext("physics");
-
-  const projects = [
-    {
-      id: 1,
-      title: "Co~Learn",
-      description: "Full-stack project: a virtual classroom",
-      techStack: ["React", "Next", "Supabase", "LiveKit"],
-      gridArea: "item1",
-    },
-    {
-      id: 2,
-      title: "Co-Narrate",
-      description:
-        "Storytelling tool that integrates Web Speech Recognition API",
-      techStack: ["React", "Tailwind"],
-      gridArea: "item2",
-    },
-    {
-      id: 3,
-      title: "RushIQ",
-      description: "A corporate website with an AI-enabled chatbot.",
-      techStack: ["React", "Tailwind", "Botpress"],
-      gridArea: "item3",
-    },
-    {
-      id: 4,
-      title: "Monochrome & Framing",
-      description:
-        "2 tailored sites, my early work. Did design & dev + deployment + maintenance",
-      techStack: ["JS", "React", "EmailJS", "GSAP"],
-      gridArea: "item4",
-    },
-    {
-      id: 5,
-      title: "Mystify Me",
-      description:
-        "A personal project where I scratched my creative itch while deepening knowledge of React + global state mgmt",
-      techStack: ["React", "Zustand", "GSAP"],
-      gridArea: "item5",
-    },
-    {
-      id: 6,
-      title: "Mystify Me",
-      description:
-        "A personal project where I scratched my creative itch while deepening knowledge of React + global state mgmt",
-      techStack: ["React", "Zustand", "GSAP"],
-      gridArea: "item6",
-    },
-    {
-      id: 7,
-      title: "Our Project?",
-      description: "…This could be something beautiful!",
-      techStack: ["Framework", "Library", "Database"],
-      gridArea: "item7",
-    },
-  ];
-
-  let sectionElement;
-  let titleElement;
   let activeModal = null;
-  let registeredTitleBoundary = null;
-  let hasMounted = false;
-
-  // Subscribe to the physics readiness store
-  $: isReady = physicsContext?.isPhysicsReady;
 
   function handleOpenModal(projectData) {
-  activeModal = projectData;
-}
+    activeModal = projectData;
+  }
 
   function closeModal() {
     activeModal = null;
   }
 
-  onMount(() => {
-    hasMounted = true;
-    console.log("Projects section mounted");
-  });
-
-  // Register title element as physics boundary
-  $: if (hasMounted && titleElement && $isReady && !registeredTitleBoundary) {
-    console.log(
-      "ProjectsSection: Physics is ready, attempting title boundary registration..."
-    );
-
-    registeredTitleBoundary = physicsContext.registerBoundary(
-      "projects-title", // unique ID
-      titleElement, // the DOM element to map
-      {
-        restitution: 0.7, // moderately bouncy
-        friction: 0.4, // moderate friction
-        label: "projects-title", // debug label
-      }
-    );
-
-    if (registeredTitleBoundary) {
-      console.log(
-        "ProjectsSection: Title successfully registered as physics boundary"
-      );
-    } else {
-      console.warn(
-        "ProjectsSection: Failed to register title physics boundary"
-      );
-    }
-  }
 </script>
 
-<section bind:this={sectionElement} id="projects" class="projects-section">
-  <div bind:this={titleElement} class="section-title-container">
-    <h2>Projects</h2>
+<section class="projects-section">
+  <div
+  class="section-title-container">
+    <h2
+    class="projects-title"
+    use:physicsRegister={{
+      restitution: 0.8,
+      friction: 0.2,
+      label: "projects-title",
+    }}>Projects</h2>
   </div>
 
   <div class="projects-container">
@@ -150,19 +61,17 @@
 
 <style>
   .projects-section {
-    width: 100%;
     padding-inline: 5%;
-    border: 2px solid navy;
     box-sizing: border-box;
   }
 
   .section-title-container {
-    width: min(66%, 320px);
-    padding-block: var(--space-8-12px);
-    border: 1px solid chocolate;
-    margin-bottom: var(--space-32-48px);
+    margin-block: var(--space-32-48px);
   }
 
+  .projects-title {
+    width: fit-content;
+  }
   .projects-container {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -180,7 +89,6 @@
   }
 
   .project-cell {
-    min-height: 200px;
     display: flex;
   }
 
@@ -256,7 +164,7 @@
         "item6 item7";
       gap: 8%;
       /* Temporary margin for grid testing */
-      margin-bottom: 300px; 
+      margin-bottom: 300px;
     }
   }
 

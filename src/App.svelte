@@ -2,13 +2,12 @@
   import { onMount } from "svelte";
 
   import ThemeProvider from "@lib/providers/ThemeProvider.svelte";
-  import PhysicsAwareSection from "./lib/components/PhysicsAwareSection.svelte";
   import Header from "@/sections/Header.svelte";
   import PhysicsCanvas from "@components/PhysicsCanvas.svelte";
   import HeroSection from "@/sections/HeroSection.svelte";
   import ProjectsSection from "@/sections/ProjectsSection.svelte";
   import SkillsSection from "./sections/SkillsSection.svelte";
-  import CallToActionSection from "./sections/CallToActionSection.svelte";
+  import CTASection from "./sections/CTASection.svelte";
   import Footer from "./sections/Footer.svelte";
 
   let loaded = false;
@@ -19,35 +18,16 @@
 </script>
 
 <ThemeProvider />
-
-<PhysicsAwareSection sectionId="header-section" debug={true}>
-  <Header />
-</PhysicsAwareSection>
-
+<Header />
 {#if loaded}
   <main>
     <PhysicsCanvas debug={true} />
-
-    <PhysicsAwareSection sectionId="hero-section" debug={true}>
-      <HeroSection />
-    </PhysicsAwareSection>
-
-    <PhysicsAwareSection sectionId="projects-section" debug={true}>
-      <ProjectsSection />
-    </PhysicsAwareSection>
-
-    <PhysicsAwareSection sectionId="skills-section" debug={true}>
-      <SkillsSection />
-    </PhysicsAwareSection>
-
-    <PhysicsAwareSection sectionId="CTA-section" debug={true}>
-      <CallToActionSection />
-    </PhysicsAwareSection>
+    <HeroSection />
+    <ProjectsSection />
+    <SkillsSection />
+    <CTASection />
   </main>
-
-  <PhysicsAwareSection sectionId="CTA-section" debug={true}>
-    <Footer />
-  </PhysicsAwareSection>
+  <Footer />
 {:else}
   <div class="loading">
     <p>Loading...</p>

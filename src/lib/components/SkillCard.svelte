@@ -1,40 +1,18 @@
 <script>
-  import { onMount, getContext } from "svelte";
-
+  import { physicsRegister } from "@lib/actions/physicsRegister.js";
   export let title = "Skill Title";
   export let description = "A brief description of this skill area.";
-
-  const physicsContext = getContext("physics");
-
-  let skillElement;
-  let registeredBoundary = null;
-  let hasMounted = false;
-
-  $: isReady = physicsContext?.isPhysicsReady;
-
-  onMount(() => {
-    hasMounted = true;
-  });
-
-  $: if (hasMounted && skillElement && $isReady && !registeredBoundary) {
-
-    registeredBoundary = physicsContext.registerBoundary(
-      `skill-card-${title.toLowerCase().replace(/\s+/g, "-")}`,
-      skillElement,
-      {
-        restitution: 0.8,
-        friction: 0.2,
-        label: `skill-card-${title}`,
-        shape: "circle",
-        boundaryType: "reactive",
-        velocityThreshold: 3.5,
-      }
-    );
-
-  }
 </script>
 
-<div bind:this={skillElement} class="skill-item">
+<div class="skill-item"
+use:physicsRegister={{
+  restitution: 0.8,
+  friction: 0.2,
+  label: "skill-item",
+  shape: "circle",
+        boundaryType: "reactive",
+        velocityThreshold: 3,
+}}>
   <h3>{title}</h3>
   <p>{description}</p>
 </div>

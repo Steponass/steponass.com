@@ -33,10 +33,10 @@ export class BoundaryMapper {
    * Register a DOM element as a physics boundary
    * @param {string} id - unique identifier for this boundary
    * @param {HTMLElement} element - the DOM element to map
-   * @param {Object} options - physics properties (restitution, friction, etc.)
-   * @param {string} options.shape - shape type: 'rectangle' (default) or 'circle'
-   * @param {string} options.boundaryType - boundary type: 'static' or 'reactive'
-   * @param {number} options.velocityThreshold - minimum velocity for reactive boundaries
+   * @param {Object} [options] - physics properties (restitution, friction, etc.)
+   * @param {string} [options.shape='rectangle'] - shape type: 'rectangle' (default) or 'circle'
+   * @param {string} [options.boundaryType='static'] - boundary type: 'static' or 'reactive'
+   * @param {number} [options.velocityThreshold] - minimum velocity for reactive boundaries
    * @returns {Object|null} - the created physics body or null if failed
    */
   registerBoundary(id, element, options = {}) {

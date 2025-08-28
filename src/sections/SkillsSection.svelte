@@ -1,81 +1,27 @@
 <script>
-  import { onMount, getContext } from "svelte";
+    import { skills } from "@lib/data/skillsData.js";
   import SkillCard from "@components/SkillCard.svelte";
+  import { physicsRegister } from "@lib/actions/physicsRegister.js";
 
-  const physicsContext = getContext("physics");
 
-  const skills = [
-    {
-      title: "Frontend Development",
-      description:
-        "Building responsive, accessible, and performant user interfaces with modern frameworks.",
-    },
-    {
-      title: "Animation & Interaction",
-      description:
-        "Creating engaging motion design and interactive experiences that delight users.",
-    },
-    {
-      title: "Backend Integration",
-      description:
-        "Connecting frontend applications to APIs and server-side systems for complete solutions.",
-    },
-    {
-      title: "Performance Optimization",
-      description:
-        "Identifying and resolving bottlenecks to ensure smooth user experiences across devices.",
-    },
-    {
-      title: "Dick Sucking",
-      description: "Identifying and resolving dry dick syndrome.",
-    },
-  ];
 
-  let sectionElement;
-  let titleElement;
-  let registeredTitleBoundary = null;
-  let hasMounted = false;
-
-  $: isReady = physicsContext?.isPhysicsReady;
-
-  onMount(() => {
-    hasMounted = true;
-    console.log("Skills section mounted");
-  });
-
-  // Register title element as physics boundary
-  $: if (hasMounted && titleElement && $isReady && !registeredTitleBoundary) {
-    console.log(
-      "SkillsSection: Physics is ready, attempting title boundary registration..."
-    );
-
-    registeredTitleBoundary = physicsContext.registerBoundary(
-      "skills-title", // unique ID
-      titleElement, // the DOM element to map
-      {
-        restitution: 0.7, // moderately bouncy
-        friction: 0.4, // moderate friction
-        label: "skills-title", // debug label
-      }
-    );
-
-    if (registeredTitleBoundary) {
-      console.log(
-        "SkillsSection: Title successfully registered as physics boundary"
-      );
-    } else {
-      console.warn("SkillsSection: Failed to register title physics boundary");
-    }
-  }
 </script>
 
-<section bind:this={sectionElement} id="skills" class="skills-section">
-  <div bind:this={titleElement} class="section-title-container">
-    <h2>Skills</h2>
+<section class="skills-section">
+  <div class="section-title-container">
+    <h2 class="skills-title"
+    use:physicsRegister={{
+      restitution: 0.8,
+      friction: 0.2,
+      label: "skills-title",
+    }}>
+    Skills</h2>
   </div>
   <div class="skills-container">
     {#each skills as skill}
-      <SkillCard title={skill.title} description={skill.description} />
+      <SkillCard 
+      title={skill.title} 
+      description={skill.description} />
     {/each}
   </div>
 </section>
@@ -87,11 +33,13 @@
   }
 
   .section-title-container {
-    width: min(66%, 320px);
-    padding-block: var(--space-8-12px);
-    border: 1px solid chocolate;
+    margin-block: var(--space-32-48px);
   }
 
+  .skills-title {
+    width: fit-content;
+  }
+  
   .skills-container {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
