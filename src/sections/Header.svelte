@@ -1,5 +1,6 @@
 <script>
   import { onMount, getContext } from "svelte";
+  import ThemeToggle from "@/lib/components/ThemeToggle.svelte";
 
   // Get access to physics registration functions from PhysicsAwareSection
   const physicsContext = getContext("physics");
@@ -59,7 +60,9 @@
       <li><a href="#contact">Contact</a></li>
       <li><a href="#resume">Resume</a></li>
     </ul>
+    <ThemeToggle />
   </nav>
+
 </header>
 
 <style>
@@ -113,8 +116,9 @@
     width: fit-content;
     display: flex;
     justify-content: center;
-    padding-block: var(--space-12-16px);
+    padding-block: var(--space-12px);
     padding-inline: var(--space-16-24px);
+    gap: var(--space-12-16px);
     pointer-events: auto;
     background: lightgrey;
     border-radius: var(--radius-8px);
@@ -125,6 +129,7 @@
   .nav-links {
     display: flex;
     list-style: none;
+    align-items: center;
     gap: var(--space-16-24px);
   }
 

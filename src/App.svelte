@@ -1,9 +1,10 @@
 <script>
   import { onMount } from "svelte";
 
+  import ThemeProvider from "@lib/providers/ThemeProvider.svelte";
   import PhysicsAwareSection from "./lib/components/PhysicsAwareSection.svelte";
   import Header from "@/sections/Header.svelte";
-  import PhysicsCanvas from "./lib/components/PhysicsCanvas.svelte";
+  import PhysicsCanvas from "@components/PhysicsCanvas.svelte";
   import HeroSection from "@/sections/HeroSection.svelte";
   import ProjectsSection from "@/sections/ProjectsSection.svelte";
   import SkillsSection from "./sections/SkillsSection.svelte";
@@ -16,6 +17,8 @@
     loaded = true;
   });
 </script>
+
+<ThemeProvider />
 
 <PhysicsAwareSection sectionId="header-section" debug={true}>
   <Header />

@@ -1,4 +1,3 @@
-
 /* Z-INDEX */
 
 @property --z-index-physics-canvas {
@@ -33,20 +32,19 @@
 
 /* COLOR */
 
-@property --clr-primary {
-  syntax: "<color>";
-  initial-value: oklch(0.8818 0.1632 92.43);
-  inherits: false;
+/* LIGHT THEME (default) */
+:root,
+:root[data-theme="light"] {
+  --clr-primary: oklch(0.8818 0.1632 92.43);
+  --clr-bg: oklch(0.9789 0.0013 106.42);
+  --clr-txt-strong: oklch(0.1339 0.0026 106.74);
+  --clr-txt-weak: oklch(0.2761 0.0091 97.67);
 }
 
-@property --clr-txt-strong {
-  syntax: "<color>";
-  initial-value: oklch(0.1339 0.0026 106.74);
-  inherits: true;
-}
-
-@property --clr-txt-weak {
-  syntax: "<color>";
-  initial-value: oklch(0.2761 0.0091 97.67);
-  inherits: true;
+/* DARK THEME  */
+:root[data-theme="dark"] {
+  --clr-primary: oklch(0.8916 0.1569 92.99);
+  --clr-bg: oklch(0.2431 0.0076 95.37);
+  --clr-txt-strong: oklch(0.9856 0.0017 67.8);
+  --clr-txt-weak: oklch(0.9301 0.0081 98.88);
 }
