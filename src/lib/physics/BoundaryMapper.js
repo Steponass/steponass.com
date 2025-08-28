@@ -2,12 +2,33 @@ import Matter from 'matter-js';
 
 const STANDARD_REACTION_CONFIG = {
   animation: {
-    scale: { from: 1.0, to: 1.05 },
-    brightness: { from: 1.0, to: 1.2 },
-    saturation: { from: 1.0, to: 1.3 },
-    duration: 200
+    scale: { from: 1.0, to: 1.1 },
+    brightness: { from: 1.0, to: 1.5 },
+    saturation: { from: 1.0, to: 1.5 },
+    duration: 300
   },
   defaultVelocityThreshold: 2.3
+};
+
+const HUE_ROTATE_REACTION_CONFIG = {
+  animation: {
+    hueRotate: { from: 0, to: 180 },
+    duration: 400
+  },
+  defaultVelocityThreshold: 2.3
+};
+
+const BLUR_SHADOW_REACTION_CONFIG = {
+  animation: {
+    scale: { from: 1.0, to: 1.03 },
+    blur: { from: 0, to: 20 },
+    dropShadow: { 
+      from: '0 0 0px rgba(0,0,0,0)', 
+      to: '0px 4px 20px rgba(252,212,62,0.8)' 
+    },
+    duration: 350
+  },
+  defaultVelocityThreshold: 2.0
 };
 
 /*
@@ -30,6 +51,7 @@ export class BoundaryMapper {
     const {
       boundaryType = 'static', // defaults to static
       velocityThreshold = STANDARD_REACTION_CONFIG.defaultVelocityThreshold,
+      reactionConfig = STANDARD_REACTION_CONFIG, // defaults to standard config
       shape = 'rectangle', // defaults to rectangle
       ...physicsOptions // all other options go to Matter.js body
     } = options;
@@ -68,7 +90,7 @@ export class BoundaryMapper {
           boundaryType,
           reactionConfig: boundaryType === 'reactive' ? {
             velocityThreshold,
-            ...STANDARD_REACTION_CONFIG.animation
+            ...reactionConfig.animation
           } : null,
           resizeObserver: null
         });
@@ -223,6 +245,28 @@ export class BoundaryMapper {
         const radius = Math.min(rect.width, rect.height) / 2;
         body = Matter.Bodies.circle(centerX, centerY, radius, defaultOptions);
 
+      } else if (shape === 'hexagon') {
+        // Use height/2 as base radius to fit element vertically
+        const baseRadius = rect.height / 2;
+        body = Matter.Bodies.polygon(centerX, centerY, 6, baseRadius, defaultOptions);
+        
+        // Scale horizontally to match element width
+        // Calculate scaling factor: desired width vs natural hexagon width
+        const naturalWidth = baseRadius * 2; // Approximate hexagon width
+        const scaleX = rect.width / naturalWidth + 0.5;
+        Matter.Body.scale(body, scaleX, 1);
+
+      } else if (shape === 'text-rectangle') {
+        // Rectangle with 80% height for better text collision boundaries
+        const adjustedHeight = rect.height * 0.65;
+        body = Matter.Bodies.rectangle(
+          centerX,
+          centerY,
+          rect.width,
+          adjustedHeight,
+          defaultOptions
+        );
+
       } else {
         // Default rectangular boundary
         body = Matter.Bodies.rectangle(
@@ -280,3 +324,6 @@ export class BoundaryMapper {
     this.registeredBoundaries.delete(id);
   }
 }
+
+// Export reaction configurations for external use
+export { STANDARD_REACTION_CONFIG, HUE_ROTATE_REACTION_CONFIG, BLUR_SHADOW_REACTION_CONFIG };

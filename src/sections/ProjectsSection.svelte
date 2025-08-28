@@ -15,7 +15,7 @@
 
 </script>
 
-<section class="projects-section">
+<section class="projects-section" id="projects">
   <div
   class="section-title-container">
     <h2
@@ -24,6 +24,7 @@
       restitution: 0.8,
       friction: 0.2,
       label: "projects-title",
+      shape: "text-rectangle",
     }}>Projects</h2>
   </div>
 

@@ -29,6 +29,7 @@
       restitution: 0.8,
       friction: 0.2,
       label: "hero-title",
+      shape: "text-rectangle",
     }}>Hey, I'm Step!<br />I do web stuff</h1>
     <button 
     class="release-button"
@@ -69,8 +70,7 @@
   .hero-heading {
     width: fit-content;
     margin-inline: auto;
-    /* background-color: var(--clr-primary); */
-    border-radius: var(--radius-2px);
+    padding-block: var(--space-16-24px);
   }
 
   .release-button {

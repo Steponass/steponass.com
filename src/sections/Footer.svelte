@@ -3,7 +3,7 @@
 </script>
 
 <footer
-  class="footer-section"
+  class="footer-section" id="contact"
   use:physicsRegister={{
     restitution: 0.8,
     friction: 0.2,

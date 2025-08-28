@@ -7,13 +7,14 @@
 
 </script>
 
-<section class="skills-section">
+<section class="skills-section" id="skills">
   <div class="section-title-container">
     <h2 class="skills-title"
     use:physicsRegister={{
       restitution: 0.8,
       friction: 0.2,
       label: "skills-title",
+      shape: "text-rectangle",
     }}>
     Skills</h2>
   </div>

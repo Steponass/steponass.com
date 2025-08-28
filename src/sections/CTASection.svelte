@@ -10,9 +10,10 @@
   <div class="section-title-container">
     <h2 class="cta-title"
     use:physicsRegister={{
-      restitution: 0.8,
+      restitution: 1,
       friction: 0.2,
       label: "cta-title",
+      shape: "text-rectangle",
     }}>Aroused?</h2>
   </div>
 
@@ -20,9 +21,11 @@
     <h2
     class="cta-heading"
     use:physicsRegister={{
-      restitution: 0.8,
+      restitution: 1,
       friction: 0.2,
       label: "hero-title",
+      shape: "text-rectangle",
+      boundaryType: "reactive",
     }}>Let's do it to it</h2>
     <p>Buzz me, mellow.</p>
 

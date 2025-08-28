@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from "svelte";
+  import { physicsRegister } from "@lib/actions/physicsRegister.js";
   import { canCollectBalls, queueLength } from "@stores/ballQueue.js";
 
   export let canvasHeight = 0;
@@ -20,6 +20,12 @@
 
 <div
   class="drain-hole"
+  use:physicsRegister={{
+    restitution: 0.8,
+    friction: 0.2,
+    label: "drain-hole",
+  }}
+
   class:active={isActive}
   class:inactive={!isActive}
   style:left="{centerX}px"

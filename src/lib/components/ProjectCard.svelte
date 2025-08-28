@@ -1,6 +1,7 @@
 <script>
   import { physicsRegister } from "@lib/actions/physicsRegister.js";
-  
+  import { BLUR_SHADOW_REACTION_CONFIG } from "@lib/physics/BoundaryMapper";
+
   export let title = "Project Title";
   export let description = "Project description goes here.";
   export let shape = "rectangle";
@@ -27,6 +28,8 @@
   use:physicsRegister={{
     restitution: 0.8,
     friction: 0.2,
+    boundaryType: "reactive",
+    reactionConfig: BLUR_SHADOW_REACTION_CONFIG,
     label: "project-card",
   }}
   on:click={handleCardClick}

@@ -66,7 +66,6 @@ export class PhysicsEngine {
       this.runner = Matter.Runner.create({
         // Sub-stepping configuration for anti-tunneling
         delta: 1000 / 120,        // Target 120Hz physics updates (8.33ms per step)
-        isFixed: true,            // Use fixed timestep for consistent physics
         enabled: true
       });
 
@@ -296,14 +295,30 @@ export class PhysicsEngine {
     const width = bounds.max.x - bounds.min.x;
     const height = bounds.max.y - bounds.min.y;
 
-    // Draw boundary rectangle
     this.ctx.strokeStyle = color;
-    this.ctx.strokeRect(
-      x - width / 2,
-      y - height / 2,
-      width,
-      height
-    );
+    this.ctx.lineWidth = 2;
+
+    // Draw the actual shape if it has vertices (polygons, hexagons)
+    if (boundary.vertices && boundary.vertices.length > 0) {
+      this.ctx.beginPath();
+      const vertices = boundary.vertices;
+      this.ctx.moveTo(vertices[0].x, vertices[0].y);
+      
+      for (let i = 1; i < vertices.length; i++) {
+        this.ctx.lineTo(vertices[i].x, vertices[i].y);
+      }
+      
+      this.ctx.closePath();
+      this.ctx.stroke();
+    } else {
+      // Fallback to bounding box for simple shapes
+      this.ctx.strokeRect(
+        x - width / 2,
+        y - height / 2,
+        width,
+        height
+      );
+    }
 
     // Label the boundary
     this.ctx.fillStyle = color;
@@ -440,14 +455,27 @@ export class PhysicsEngine {
    * @param {number} impactForce - Force magnitude (could be used for effect intensity)
    */
   applyReactionEffects(element, reactionConfig, impactForce) {
-    const { scale, brightness, saturation, duration } = reactionConfig;
+    const { scale, brightness, saturation, hueRotate, blur, dropShadow, duration } = reactionConfig;
 
-    // Store the original state to restore it later
-    const originalTransform = element.style.transform || '';
-    const originalFilter = element.style.filter || '';
+    // Clear any ongoing animations to prevent stacking effects
+    element.style.transition = '';
+    
+    // Store the original state (without any existing scale transforms)
+    const originalTransform = this.getBaseTransform(element.style.transform || '');
+    const originalFilter = this.getBaseFilter(element.style.filter || '');
 
+    // Build filter effects dynamically based on available properties
+    let filterEffects = [];
+    
+    if (brightness) filterEffects.push(`brightness(${brightness.to})`);
+    if (saturation) filterEffects.push(`saturate(${saturation.to})`);
+    if (hueRotate) filterEffects.push(`hue-rotate(${hueRotate.to}deg)`);
+    if (blur) filterEffects.push(`blur(${blur.to}px)`);
+    if (dropShadow) filterEffects.push(`drop-shadow(${dropShadow.to})`);
+
+    // Apply the reaction effects with clean transforms
     element.style.transform = `${originalTransform} scale(${scale.to})`;
-    element.style.filter = `brightness(${brightness.to}) saturate(${saturation.to})`;
+    element.style.filter = filterEffects.join(' ');
 
     // Set up the return animation using CSS transitions
     element.style.transition = `transform ${duration}ms ease-out, filter ${duration}ms ease-out`;
@@ -461,6 +489,36 @@ export class PhysicsEngine {
         element.style.transition = '';
       }, duration);
     }, 50); // Short delay before starting the return animation
+  }
+
+  /**
+   * Extract base transform without scale to prevent stacking effects
+   * @param {string} transformString - Current transform CSS string
+   * @returns {string} - Transform string without scale functions
+   */
+  getBaseTransform(transformString) {
+    if (!transformString) return '';
+    
+    // Remove any scale transforms to prevent accumulation
+    return transformString.replace(/scale\([^)]*\)/g, '').trim();
+  }
+
+  /**
+   * Extract base filter without reaction effects to prevent stacking effects
+   * @param {string} filterString - Current filter CSS string
+   * @returns {string} - Filter string without brightness/saturate/hue-rotate/blur/drop-shadow functions
+   */
+  getBaseFilter(filterString) {
+    if (!filterString) return '';
+    
+    // Remove all reaction-based filters to prevent accumulation
+    return filterString
+      .replace(/brightness\([^)]*\)/g, '')
+      .replace(/saturate\([^)]*\)/g, '')
+      .replace(/hue-rotate\([^)]*\)/g, '')
+      .replace(/blur\([^)]*\)/g, '')
+      .replace(/drop-shadow\([^)]*\)/g, '')
+      .trim();
   }
 
   /**
