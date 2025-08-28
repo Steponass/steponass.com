@@ -1,12 +1,13 @@
 <script>
   import { ballQueue, queueLength, canReleaseBall } from "@stores/ballQueue.js";
+  import { physicsRegister } from "@lib/actions/physicsRegister.js";
 
   export let canvasWidth = 0;
 
   const CHUTE_WIDTH = 48;
   const CHUTE_WALL_THICKNESS = 5; 
   const CHUTE_HEIGHT = 150;
-  const BALL_SPACING = 46;
+  const BALL_SPACING = 43;
 
   $: chuteX = canvasWidth * 0.85; // 15% from right
   $: chuteY = -(CHUTE_HEIGHT * 0.5); // only bottom 25% visible
@@ -26,6 +27,12 @@
 
 <div
   class="gravity-chute"
+  use:physicsRegister={{
+    restitution: 0.8,
+    friction: 0.2,
+    label: "gravity-chute",
+  }}
+
   class:has-balls={hasQueuedBalls}
   class:can-release={canRelease}
   style:left="{chuteX}px"
@@ -112,9 +119,8 @@
     border-radius: 50%;
     background: var(--ball-color);
     box-shadow:
-      inset -2px -4px 6px rgba(0, 0, 0, 0.2),
-      inset 2px 4px 6px rgba(255, 255, 255, 0.3),
-      0 2px 4px rgba(0, 0, 0, 0.3);
+      0 3px 8px rgba(0, 0, 0, 0.1),
+      0 1px 2px rgba(0, 0, 0, 0.3);
   }
 
   .bottom-ball {

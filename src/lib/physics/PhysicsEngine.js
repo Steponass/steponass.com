@@ -7,7 +7,6 @@ export class PhysicsEngine {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
 
-    // These will hold our Matter.js components
     this.engine = null;
     this.world = null;
     this.runner = null;
@@ -16,11 +15,11 @@ export class PhysicsEngine {
     this.ballVisualStates = new Map();
 
     this.drainHole = {
-      centerX: 0,        // Will be calculated based on canvas width
-      centerY: 0,        // Will be calculated based on canvas height  
-      radius: 15,        // Detection radius for ball collection (smaller = disappears closer)
-      visualRadius: 12,  // Visual hole size (smaller than detection)
-      shrinkZone: 30     // Radius where shrinking effect begins (just outside the hole)
+      centerX: 0,
+      centerY: 0,
+      radius: 15,      // Detection radius for ball collection (smaller = disappears closer)
+      visualRadius: 12,
+      shrinkZone: 30   // Radius where shrinking effect begins (just outside the hole)
     };
 
     this.ballsBeingCollected = new Map();
@@ -32,28 +31,24 @@ export class PhysicsEngine {
     this.previousCanvasWidth = 0;
     this.previousCanvasHeight = 0;
 
-    // Debug mode helps us see what's happening behind the scenes
-    this.debugMode = true; // We'll make this configurable later
+
+    this.debugMode = true;
 
     this.log = this.debugMode ? console.log : () => { };
 
-
-    console.log('PhysicsEngine initialized');
   }
 
-  /**
-   * Initialize the Matter.js physics world
+  /*
+   * Initialize Matter.js physics world
    */
   init() {
     try {
-      // Create the physics engine - this calculates all interactions
       this.engine = Matter.Engine.create({
         // Anti-tunneling settings - prevent fast objects from passing through boundaries
-        positionIterations: 6,    // Default: 6. Higher = better collision detection, lower performance
-        velocityIterations: 4,     // Default: 4. Higher = more accurate velocity calculations
-        constraintIterations: 2,   // Default: 2. Affects constraint solving accuracy
+        positionIterations: 8,    // Default: 6. Higher = better collision detection, lower performance
+        velocityIterations: 6,     // Default: 4. Higher = more accurate velocity calculations
+        constraintIterations: 4,   // Default: 2. Affects constraint solving accuracy
 
-        // Performance and stability settings
         enableSleeping: true,      // Allow inactive bodies to "sleep" for better performance
 
         // Timing configuration for consistent simulation
@@ -63,33 +58,26 @@ export class PhysicsEngine {
         }
       });
 
-
       this.world = this.engine.world;
 
-      // Set gravity - gravity.y of 1 is Earth-like gravity
       this.engine.gravity.y = 1;
       this.engine.gravity.x = 0;
 
-      // Create the runner - this is what keeps the physics updating
       this.runner = Matter.Runner.create({
         // Sub-stepping configuration for anti-tunneling
         delta: 1000 / 120,        // Target 120Hz physics updates (8.33ms per step)
         isFixed: true,            // Use fixed timestep for consistent physics
-        enabled: true             // Enable the runner by default
+        enabled: true
       });
 
-      // Create boundaries around the canvas edges
       this.createViewportBoundaries();
 
       this.updateDrainHolePosition();
 
-      // Set up collision event listening for reactive boundaries
       this.setupCollisionEvents();
 
-      // Pre-populate the ballQueue instead of creating physics balls
       this.populateInitialBallQueue();
 
-      console.log('Matter.js engine initialized successfully');
       return true;
     } catch (error) {
       console.error('Failed to initialize physics engine:', error);
@@ -97,31 +85,27 @@ export class PhysicsEngine {
     }
   }
 
-  /**
+  /*
    * Start the physics simulation
    */
   start() {
     if (!this.engine || !this.runner) {
-      console.error('Physics engine not initialized. Call init() first.');
       return;
     }
 
     try {
-      // Start the runner - now physics calculations begin happening every frame
+      // Start the runner - physics calculations begin happening every frame
       Matter.Runner.run(this.runner, this.engine);
 
-      // Start our custom render loop
       this.startRenderLoop();
 
-      console.log('Physics engine started');
     } catch (error) {
       console.error('Failed to start physics engine:', error);
     }
   }
 
-  /**
+  /*
    * Stop the physics simulation
-   * Important for cleanup when component unmounts
    */
   stop() {
     if (this.runner) {
@@ -132,20 +116,14 @@ export class PhysicsEngine {
       cancelAnimationFrame(this.renderLoopId);
       this.renderLoopId = null;
     }
-
-    console.log('Physics engine stopped');
   }
 
-  /**
+  /*
    * Clean up all physics objects and stop the render loop
    */
   cleanup() {
-    console.log('Cleaning up physics engine...');
-
-    // Stop the render loop
     this.stop();
 
-    // Clear all balls
     this.balls.forEach(ball => {
       if (this.world && ball) {
         Matter.World.remove(this.world, ball);
@@ -153,24 +131,19 @@ export class PhysicsEngine {
     });
     this.balls = [];
 
-    // Clear all boundaries  
     this.clearBoundaries();
 
-    // Clear the world
     if (this.world) {
       Matter.World.clear(this.world, false);
     }
-
-    console.log('Physics engine cleanup complete');
   }
 
-  /**
+  /*
    * Custom render loop - this draws everything on our canvas
    * We use our own instead of Matter.js's built-in renderer for more control
    */
   startRenderLoop() {
     if (this.renderLoopId) {
-      // Already running, don't start another loop
       return;
     }
 
@@ -179,12 +152,9 @@ export class PhysicsEngine {
         // Clear the entire canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-
         this.checkBallCollection();
 
-        // Draw all the physics objects (no coordinate translation needed)
         this.renderBalls();
-
 
         // Draw debug information if enabled
         if (this.debugMode) {
@@ -196,17 +166,14 @@ export class PhysicsEngine {
 
       } catch (error) {
         console.error('Render loop error:', error);
-        // Don't stop the loop for minor errors, but log them
         this.renderLoopId = requestAnimationFrame(render);
       }
     };
 
-    console.log('Starting physics render loop');
     this.renderLoopId = requestAnimationFrame(render);
   }
 
-
-  /**
+  /*
    * Draw all balls on the canvas with state-aware visual effects
    */
   renderBalls() {
@@ -219,20 +186,17 @@ export class PhysicsEngine {
 
       this.ctx.save();
 
-      // Apply visual effects based on the ball's current state
       if (visualState === 'hovered') {
-        // Draw glow effect for hovered balls
         this.renderBallGlow(x, y, radius);
       }
 
-      // Get ball color once
       const ballColor = this.getBallColor(visualState);
       this.ctx.fillStyle = ballColor;
 
       // First shadow (softer, larger, more offset)
-      this.ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+      this.ctx.shadowColor = 'rgba(0, 0, 0, 0.1)';
       this.ctx.shadowBlur = 8;
-      this.ctx.shadowOffsetX = 1;
+      this.ctx.shadowOffsetX = 0;
       this.ctx.shadowOffsetY = 3;
 
       // Draw ball with first shadow
@@ -241,10 +205,10 @@ export class PhysicsEngine {
       this.ctx.fill();
 
       // Second shadow (sharper, closer to ball)
-      this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-      this.ctx.shadowBlur = 3;
+      this.ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+      this.ctx.shadowBlur = 2;
       this.ctx.shadowOffsetX = 0;
-      this.ctx.shadowOffsetY = 2;
+      this.ctx.shadowOffsetY = 1;
 
       // Draw ball with second shadow
       this.ctx.beginPath();
@@ -257,49 +221,23 @@ export class PhysicsEngine {
       this.ctx.shadowOffsetX = 0;
       this.ctx.shadowOffsetY = 0;
 
-      // Debug: show ball center and velocity vector if in debug mode
-      if (this.debugMode) {
-        // Mark center point
-        this.ctx.fillStyle = '#000';
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, 2, 0, Math.PI * 2);
-        this.ctx.fill();
-
-        // Show velocity as a line (helps debug movement)
-        const velocity = ball.velocity;
-        const scale = 5; // Scale factor to make velocity visible
-        this.ctx.strokeStyle = '#0066ff';
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.moveTo(x, y);
-        this.ctx.lineTo(x + velocity.x * scale, y + velocity.y * scale);
-        this.ctx.stroke();
-
-        // Show visual state as text
-        this.ctx.fillStyle = '#000';
-        this.ctx.font = '12px monospace';
-        this.ctx.fillText(visualState, x + radius + 5, y);
-      }
-
       this.ctx.restore();
     });
   }
 
-  /**
+  /*
    * Render a glow effect around a ball
-   * This creates the visual feedback that indicates a ball can be interacted with
    */
   renderBallGlow(centerX, centerY, radius) {
-    const glowRadius = radius + 15; // Glow extends beyond the ball
+    const glowRadius = radius + 5; // Glow extends beyond the ball
     const gradient = this.ctx.createRadialGradient(
       centerX, centerY, radius,           // Inner circle (ball edge)
       centerX, centerY, glowRadius        // Outer circle (glow edge)
     );
 
-    // Create a gradient that fades from semi-transparent to fully transparent
-    gradient.addColorStop(0, 'rgba(255, 107, 107, 0.3)'); // Semi-transparent red at ball edge
-    gradient.addColorStop(0.7, 'rgba(255, 107, 107, 0.1)'); // Lighter red in middle of glow
-    gradient.addColorStop(1, 'rgba(255, 107, 107, 0)');     // Fully transparent at glow edge
+    gradient.addColorStop(0, 'rgba(245, 61, 63, 0.3)'); // Semi-transparent red at ball edge
+    gradient.addColorStop(0.7, 'rgba(245, 61, 63, 0.1)'); // Lighter red in middle of glow
+    gradient.addColorStop(1, 'rgba(245, 61, 63, 0)');     // Fully transparent at glow edge
 
     this.ctx.fillStyle = gradient;
     this.ctx.beginPath();
@@ -307,29 +245,24 @@ export class PhysicsEngine {
     this.ctx.fill();
   }
 
-  /**
-   * Get the appropriate color for a ball based on its visual state
-   * This allows different states to have different colors if desired
-   */
   getBallColor(visualState) {
     switch (visualState) {
       case 'hovered':
-        return '#ff5252'; // Slightly different red when hovered
+        return '#F53D3F';
       case 'dragged':
-        return '#ff3030'; // Even more intense red when being dragged
+        return '#CC2426';
       default:
-        return '#ff6b6b'; // Default red color
+        return '#E73C3E'; // Default color
     }
   }
 
   /**
   * Draw debug boundaries so we can see the invisible walls
-  * Now handles both viewport and DOM boundaries with different colors
   */
   renderDebugBoundaries() {
     this.ctx.save();
 
-    // Draw viewport boundaries (green, as before)
+    // Draw viewport boundaries (green)
     if (this.boundaries.length) {
       this.ctx.strokeStyle = '#00ff00';
       this.ctx.lineWidth = 2;
@@ -340,7 +273,7 @@ export class PhysicsEngine {
       });
     }
 
-    // Draw DOM boundaries (blue, to distinguish them)
+    // Draw DOM boundaries (blue)
     if (this.domBoundaries.length) {
       this.ctx.strokeStyle = '#0066ff';
       this.ctx.lineWidth = 2;
@@ -383,10 +316,10 @@ export class PhysicsEngine {
   }
 
 
-  /**
-   * Create invisible boundaries around the canvas edges
-   * These act like walls that keep balls within the main content area
+  /*
+   * Create invisible boundaries around the canvas edges to keep balls within main content area
    */
+
   createViewportBoundaries() {
     if (!this.canvas || !this.world) {
       console.error('Canvas or world not available for boundary creation');
@@ -397,7 +330,7 @@ export class PhysicsEngine {
 
     const width = this.canvas.width;
     const height = this.canvas.height;
-    const thickness = 250; // Increased thickness
+    const thickness = 250; // Extra thick to avoid "tunneling"
 
     // Store initial canvas dimensions for future scaling calculations
     this.previousCanvasWidth = width;
@@ -417,50 +350,34 @@ export class PhysicsEngine {
       this.createBoundary(width + thickness / 2, height / 2, thickness, height, 'right-wall')
     ];
 
-    // Add all boundaries to the physics world
     boundaries.forEach(boundary => {
       if (boundary) {
         Matter.World.add(this.world, boundary);
         this.boundaries.push(boundary);
       }
     });
-
-    console.log(`Created ${boundaries.length} canvas boundaries for ${width}x${height} area`);
-    console.log('Boundary positions:');
-    boundaries.forEach((boundary, i) => {
-      if (boundary) {
-        console.log(`  ${boundary.label}: (${boundary.position.x}, ${boundary.position.y})`);
-      }
-    });
   }
 
-  /**
+  /*
    * Set up collision event listeners for reactive boundary feedback
-   * This is the "security camera notification system" for physics interactions
    */
   setupCollisionEvents() {
     if (!this.engine) {
-      console.warn('PhysicsEngine: Cannot setup collision events without engine');
       return;
     }
 
-    // Matter.js provides several collision events, but we want 'collisionStart'
-    // This fires once when objects first make contact (not continuously while touching)
     Matter.Events.on(this.engine, 'collisionStart', (event) => {
       this.handleCollisionStart(event);
     });
-
-    this.log('PhysicsEngine: Collision event listeners established');
   }
 
 
   /**
-   * Handle collision start events - this is our "detective work" method
+   * Handle collision start events
    * Examines each collision to determine if visual feedback should trigger
    * @param {Object} event - Matter.js collision event containing pairs of colliding objects
    */
   handleCollisionStart(event) {
-    // Matter.js gives us an array of collision pairs
     // Each pair represents two objects that just started touching
     const pairs = event.pairs;
 
@@ -480,8 +397,6 @@ export class PhysicsEngine {
         ball = bodyB;
         boundary = bodyA;
       } else {
-        // This collision doesn't involve a ball hitting a boundary
-        // Could be ball-to-ball, boundary-to-boundary, or ball-to-viewport-wall
         return; // Skip this collision
       }
 
@@ -497,14 +412,13 @@ export class PhysicsEngine {
         return; // Impact too gentle - no reaction needed
       }
 
-      // All conditions met! Trigger visual feedback
+      // All conditions met: trigger visual feedback
       this.triggerBoundaryReaction(boundaryInfo, impactForce);
     });
   }
 
   /**
    * Trigger visual reaction for a boundary that was hit by a ball
-   * This bridges the physics world back to DOM visual effects
    * @param {Object} boundaryInfo - The boundary data including DOM element and reaction config
    * @param {number} impactForce - The calculated impact force for potential effect scaling
    */
@@ -512,20 +426,15 @@ export class PhysicsEngine {
     const { element, reactionConfig } = boundaryInfo;
 
     if (!element || !reactionConfig) {
-      this.log('PhysicsEngine: Cannot trigger reaction - missing element or config');
       return;
     }
 
-    // Apply visual effects using CSS custom properties
-    // This is the "lighting up" moment when physics meets visual design
     this.applyReactionEffects(element, reactionConfig, impactForce);
 
-    this.log(`PhysicsEngine: Triggered reaction for ${boundaryInfo.physicsBody.label} with force ${impactForce.toFixed(2)}`);
   }
 
   /**
-   * Apply the actual visual effects to a DOM element
-   * Uses CSS custom properties for smooth, hardware-accelerated animations
+   * Apply the visual effects to a DOM element
    * @param {HTMLElement} element - The DOM element to animate
    * @param {Object} reactionConfig - Animation configuration with scale, brightness, etc.
    * @param {number} impactForce - Force magnitude (could be used for effect intensity)
@@ -533,11 +442,10 @@ export class PhysicsEngine {
   applyReactionEffects(element, reactionConfig, impactForce) {
     const { scale, brightness, saturation, duration } = reactionConfig;
 
-    // Store the original state so we can restore it later
+    // Store the original state to restore it later
     const originalTransform = element.style.transform || '';
     const originalFilter = element.style.filter || '';
 
-    // Apply the reaction effects immediately
     element.style.transform = `${originalTransform} scale(${scale.to})`;
     element.style.filter = `brightness(${brightness.to}) saturate(${saturation.to})`;
 
@@ -545,12 +453,10 @@ export class PhysicsEngine {
     element.style.transition = `transform ${duration}ms ease-out, filter ${duration}ms ease-out`;
 
     // Return to original state after a short delay
-    // This creates the "flash" effect - quick reaction then fade back to normal
     setTimeout(() => {
       element.style.transform = originalTransform;
       element.style.filter = originalFilter;
 
-      // Clean up transition after animation completes
       setTimeout(() => {
         element.style.transition = '';
       }, duration);
@@ -559,7 +465,6 @@ export class PhysicsEngine {
 
   /**
    * Check if a physics body represents a ball
-   * We identify balls by their label property set during creation
    * @param {Object} body - Matter.js physics body
    * @returns {boolean} - true if this body is a ball
    */
@@ -569,7 +474,6 @@ export class PhysicsEngine {
 
   /**
    * Check if a physics body represents a boundary (static or reactive)
-   * We identify boundaries by checking if they're static and not balls
    * @param {Object} body - Matter.js physics body  
    * @returns {boolean} - true if this body is a boundary
    */
@@ -578,8 +482,7 @@ export class PhysicsEngine {
   }
 
   /**
-   * Get boundary information from our boundary mappers
-   * This connects the physics body back to our boundary metadata
+   * Get boundary information from boundary mappers
    * @param {Object} physicsBody - Matter.js body representing a boundary
    * @returns {Object|null} - boundary info with type and reaction config, or null
    */
@@ -594,30 +497,23 @@ export class PhysicsEngine {
         }
       }
     }
-    return null; // This boundary isn't tracked by our mappers
+    return null;
   }
 
   /**
    * Calculate the meaningful impact force from a collision
-   * This determines whether the impact was "significant enough" for visual feedback
    * @param {Object} collision - Matter.js collision data
    * @param {Object} ball - The ball object involved in collision
    * @returns {number} - Impact force magnitude
    */
   calculateImpactForce(collision, ball) {
-    // Method 1: Use the ball's velocity magnitude
-    // This represents "how fast was the ball moving when it hit?"
     const velocity = ball.velocity;
     const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
 
-    // Method 2: We could also use collision force data
-    // const force = collision.force || 0;
-
-    // For now, using speed is simpler and more predictable
     return speed;
   }
 
-  /**
+  /*
    * Create a single boundary (wall) at specified position
    * x, y = center position, width/height = dimensions, label = debug name
    */
@@ -627,10 +523,9 @@ export class PhysicsEngine {
         isStatic: true, // Static means it won't move or be affected by physics
         label: label,   // Useful for debugging
         render: {
-          fillStyle: 'transparent' // We don't want to see these normally
+          fillStyle: 'transparent'
         },
-        // Physics properties that affect how balls bounce off
-        restitution: 0.8, // Bounciness (0 = no bounce, 1 = perfect bounce)
+        restitution: 1, // Bounciness (0 = no bounce, 1 = perfect bounce)
         friction: 0.3      // Surface friction (affects sliding)
       });
 
@@ -641,9 +536,8 @@ export class PhysicsEngine {
     }
   }
 
-  /**
-   * Remove all existing boundaries from the world
-   * Useful when canvas resizes and we need to recreate boundaries
+  /*
+   * Remove all existing boundaries from the world: for when canvas resizes and we need to recreate boundaries
    */
   clearBoundaries() {
     this.boundaries.forEach(boundary => {
@@ -654,19 +548,14 @@ export class PhysicsEngine {
     this.boundaries = [];
   }
 
-  /**
+  /*
    * Update boundaries when canvas size changes
-   * This is important for responsive design
    */
   updateBoundaries() {
     if (!this.world) return;
 
-    console.log('Updating boundaries for new canvas size');
-
-    // Store old boundaries temporarily
     const oldBoundaries = [...this.boundaries];
 
-    // Create new boundaries first (don't clear old ones yet)
     const width = this.canvas.width;
     const height = this.canvas.height;
     const thickness = 50;
@@ -678,24 +567,20 @@ export class PhysicsEngine {
       this.createBoundary(width + thickness / 2, height / 2, thickness, height, 'right-wall')
     ];
 
-    // Add new boundaries to world
     newBoundaries.forEach(boundary => {
       if (boundary) {
         Matter.World.add(this.world, boundary);
       }
     });
 
-    // Now remove old boundaries (new ones are already in place)
     oldBoundaries.forEach(boundary => {
       if (this.world && boundary) {
         Matter.World.remove(this.world, boundary);
       }
     });
 
-    // Update tracking array
     this.boundaries = newBoundaries.filter(b => b !== null);
 
-    //  Update drain hole position for new canvas size
     this.updateDrainHolePosition();
 
     // Proportionally reposition balls based on canvas size change
@@ -704,44 +589,33 @@ export class PhysicsEngine {
         const scaleX = width / this.previousCanvasWidth;
         const scaleY = height / this.previousCanvasHeight;
 
-        console.log(`Scaling balls: ${this.previousCanvasWidth}x${this.previousCanvasHeight} → ${width}x${height} (scale: ${scaleX.toFixed(3)}x, ${scaleY.toFixed(3)}y)`);
-
         this.balls.forEach(ball => {
           const currentX = ball.position.x;
           const currentY = ball.position.y;
 
-          // Calculate new position with proportional scaling
           const newX = currentX * scaleX;
           const newY = currentY * scaleY;
 
-          // Ensure ball stays within canvas bounds
           const radius = ball.circleRadius || 22;
           const clampedX = Math.max(radius, Math.min(width - radius, newX));
           const clampedY = Math.max(radius, Math.min(height - radius, newY));
 
-          // Update ball position
           Matter.Body.setPosition(ball, { x: clampedX, y: clampedY });
 
-          // Scale velocity proportionally to maintain physics behavior
           const currentVel = ball.velocity;
           const scaledVelX = currentVel.x * scaleX;
           const scaledVelY = currentVel.y * scaleY;
           Matter.Body.setVelocity(ball, { x: scaledVelX, y: scaledVelY });
 
-          console.log(`Ball repositioned: (${currentX.toFixed(1)}, ${currentY.toFixed(1)}) → (${clampedX.toFixed(1)}, ${clampedY.toFixed(1)})`);
         });
-      } else {
-        console.log('No previous dimensions available, skipping ball scaling');
       }
-    } catch (err) {
-      console.warn('Ball repositioning during resize failed:', err);
+    } catch (error) {
+      console.warn('Ball repositioning during resize failed:', error);
     }
 
-    // Update stored dimensions for next resize
     this.previousCanvasWidth = width;
     this.previousCanvasHeight = height;
 
-    console.log('Boundary update complete');
 
     // Force update all DOM boundary positions after canvas resize
     // Use a small delay to ensure DOM layout has settled
@@ -755,7 +629,7 @@ export class PhysicsEngine {
     }, 100);
   }
 
-  /**
+  /*
    * Create a physics ball at specified position
    * radius = ball size, x/y = starting position
    */
@@ -763,21 +637,17 @@ export class PhysicsEngine {
     try {
       const ball = Matter.Bodies.circle(x, y, radius, {
         // Physical properties that affect how the ball behaves
-        restitution: 0.9,    // Bounciness (0.7 = fairly bouncy)
-        friction: 0.02,      // Surface friction (low = rolls easily) 
+        restitution: 1,    // Bounciness (0.7 = fairly bouncy)
+        friction: 0.01,      // Surface friction (low = rolls easily) 
         frictionAir: 0.01,   // Air resistance (prevents infinite bouncing)
-        density: 0.02,      // Mass per unit area (affects how heavy it feels)
-
-        // Visual properties for Matter.js built-in renderer (we don't use this, but good to have)
+        density: 0.01,      // Mass per unit area (affects how heavy it feels)
         render: {
-          fillStyle: '#ff6b6b'
+          fillStyle: '#E73C3E'
         },
-
         // Label for debugging
         label: 'physics-ball'
       });
 
-      // Store the radius on the ball object so our renderer can access it
       ball.circleRadius = radius;
 
       return ball;
@@ -787,8 +657,8 @@ export class PhysicsEngine {
     }
   }
 
-  /**
-   * Add a ball to the physics world and our tracking array
+  /*
+   * Add a ball to the physics world and tracking array
    */
   addBall(x, y, radius = 22) {
     const ball = this.createBall(x, y, radius);
@@ -797,10 +667,9 @@ export class PhysicsEngine {
       // Add to Matter.js world so it participates in physics
       Matter.World.add(this.world, ball);
 
-      // Add to our tracking array so we can render it
+      // Add to tracking array so we can render it
       this.balls.push(ball);
 
-      console.log(`Ball added at position (${x}, ${y}) with radius ${radius}px`);
       return ball;
     }
 
@@ -808,31 +677,19 @@ export class PhysicsEngine {
   }
 
   /**
-   * Pre-populate the ball queue with 12 balls for the gravity chute
+   * Pre-populate the ball queue for the gravity chute
    * This creates ball data (not physics bodies) that will be shown in the chute
    */
   populateInitialBallQueue() {
-    console.log('PhysicsEngine: Pre-populating ball queue with 12 balls...');
-
-    // Create 12 balls with consistent, small sizes
     for (let i = 0; i < 24; i++) {
       const ballData = {
-        radius: 22 + Math.random() * 4, // Vary size (22-26px)
-        color: '#ff6b6b',
+        radius: 22 + Math.random() * 2, // Vary size (22-24px)
+        color: '#E73C3E',
         id: `initial-ball-${i}`,
-        queuedAt: Date.now() + i // Slightly different timestamps
+        queuedAt: Date.now() + i
       };
-
       const success = addBallToQueue(ballData);
-      if (success) {
-        console.log(`Initial ball ${i + 1}/12 added to queue (radius: ${ballData.radius.toFixed(1)}px)`);
-      } else {
-        console.warn(`Failed to add initial ball ${i + 1} to queue - queue may be full`);
-        break;
-      }
     }
-
-    console.log('PhysicsEngine: Initial ball queue population complete');
   }
 
   /**
@@ -843,12 +700,9 @@ export class PhysicsEngine {
    */
   setBallVisualState(ball, state) {
     if (!ball) {
-      console.warn('PhysicsEngine: Cannot set visual state for null/undefined ball');
       return;
     }
-
     this.ballVisualStates.set(ball, state);
-    this.log(`PhysicsEngine: Ball visual state set to "${state}"`);
   }
 
   /**
@@ -866,9 +720,7 @@ export class PhysicsEngine {
    */
   clearBallVisualState(ball) {
     this.ballVisualStates.delete(ball);
-    this.log('PhysicsEngine: Ball visual state cleared (returned to normal)');
   }
-
 
   /**
  * Register a DOM boundary with the physics engine
@@ -876,7 +728,6 @@ export class PhysicsEngine {
  */
   registerDomBoundary(physicsBody, metadata = {}) {
     if (!physicsBody || !this.world) {
-      console.warn('PhysicsEngine: Cannot register DOM boundary - missing body or world');
       return false;
     }
 
@@ -889,7 +740,6 @@ export class PhysicsEngine {
         ...metadata
       });
 
-      this.log(`PhysicsEngine: DOM boundary registered: ${physicsBody.label}`);
       return true;
     } catch (error) {
       console.error('PhysicsEngine: Failed to register DOM boundary:', error);
@@ -905,7 +755,6 @@ export class PhysicsEngine {
     const index = this.domBoundaries.findIndex(boundary => boundary.body === physicsBody);
     if (index !== -1) {
       this.domBoundaries.splice(index, 1);
-      this.log(`PhysicsEngine: DOM boundary unregistered: ${physicsBody.label}`);
     }
   }
 
@@ -921,7 +770,7 @@ export class PhysicsEngine {
   }
 
   /**
-   * Update all DOM boundary positions (simplified for canvas-relative coordinates)
+   * Update all DOM boundary positions
    */
   updateBoundaryPositions() {
     if (!this.boundaryMappers.length) return;
@@ -939,8 +788,6 @@ export class PhysicsEngine {
    */
   forceUpdateAllBoundaryPositions() {
     if (!this.boundaryMappers.length) return;
-
-    console.log('PhysicsEngine: Force updating all DOM boundary positions');
 
     this.boundaryMappers.forEach(mapper => {
       if (mapper && typeof mapper.updateBoundaryPositions === 'function') {
@@ -963,8 +810,6 @@ export class PhysicsEngine {
     // Position drain hole at bottom-left of canvas (horizontal orientation)
     this.drainHole.centerX = 60; // Half pipe length from left edge (120/2 = 60)
     this.drainHole.centerY = canvasHeight - 34; // Bottom placement with margin (48/2 + 10 = 34)
-
-    this.log(`DrainHole: Updated position to (${this.drainHole.centerX}, ${this.drainHole.centerY})`);
   }
 
   /**
@@ -975,19 +820,12 @@ export class PhysicsEngine {
     // Only collect if queue has space
     const canCollect = get(canCollectBalls);
     if (!canCollect) {
-      // Only log this occasionally to avoid spam
-      if (Math.random() < 0.01) { // 1% chance per frame
-        console.log('DrainHole: Queue full, not collecting balls');
-      }
       return;
     }
 
-
-    // Check each active ball
     this.balls.forEach((ball, ballIndex) => {
       const ballX = ball.position.x;
       const ballY = ball.position.y;
-      const ballRadius = ball.circleRadius || 22;
 
       // Calculate distance from ball center to drain hole center
       const deltaX = ballX - this.drainHole.centerX;
@@ -1007,7 +845,7 @@ export class PhysicsEngine {
     });
   }
 
-  /**
+  /*
    * Start the collection process for a ball that entered the drain area
    */
   startBallCollection(ball, ballIndex, distanceToHole) {
@@ -1024,14 +862,11 @@ export class PhysicsEngine {
         startTime: Date.now(),
         ballIndex: ballIndex
       });
-
     }
 
     // Update shrinking effect based on distance
     this.updateBallShrinking(ball, distanceToHole);
   }
-
-
 
   /**
    * Update ball shrinking effect as it approaches the drain hole
@@ -1074,7 +909,7 @@ export class PhysicsEngine {
       // Prepare ball data for the queue
       const ballData = {
         radius: ball.circleRadius || 22,
-        color: '#ff6b6b',
+        color: '#E73C3E',
         originalLabel: ball.label
       };
 
@@ -1082,23 +917,19 @@ export class PhysicsEngine {
       const success = addBallToQueue(ballData);
 
       if (success) {
-        // Remove from physics world
         if (this.world && ball) {
           Matter.World.remove(this.world, ball);
         }
 
-        // Remove from our tracking arrays
         this.balls.splice(ballIndex, 1);
         this.ballsBeingCollected.delete(ball);
 
-        // Clear any visual state
         this.ballVisualStates.delete(ball);
 
       } else {
         // Queue was full, stop the collection process
         this.ballsBeingCollected.delete(ball);
 
-        // Reset visual radius
         if (ball.visualRadius !== undefined) {
           delete ball.visualRadius;
         }
@@ -1110,7 +941,6 @@ export class PhysicsEngine {
       this.ballsBeingCollected.delete(ball);
     }
   }
-
 
   /**
    * Release a ball from the gravity chute
@@ -1124,7 +954,7 @@ export class PhysicsEngine {
 
     // Calculate chute release position (matches GravityChute component positioning)
     const canvasWidth = this.canvas.width;
-    const chuteX = canvasWidth * 0.8; // 80% from left = 20% from right (matches GravityChute)
+    const chuteX = canvasWidth * 0.85; // 80% from left = 20% from right (matches GravityChute)
     // Chute is positioned with 75% above screen, so visible bottom is at 25% of chute height
     const chuteY = (400 * 0.25) + 10; // Bottom of visible chute section + small margin
 
@@ -1136,10 +966,8 @@ export class PhysicsEngine {
     );
 
     if (releasedBall) {
-      // Add to physics world
       Matter.World.add(this.world, releasedBall);
 
-      // Add to our tracking array
       this.balls.push(releasedBall);
 
       // Give the ball a slight initial velocity for natural release
@@ -1157,6 +985,5 @@ export class PhysicsEngine {
 
     return null;
   }
-
 
 }

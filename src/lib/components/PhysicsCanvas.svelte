@@ -23,7 +23,6 @@
   let engine;
   let hoverDetection;
   let dragManager;
-  let touchHitDetection;
   let canvasWidth = 0;
   let canvasHeight = 0;
 

@@ -11,7 +11,6 @@ use:physicsRegister={{
   label: "skill-item",
   shape: "circle",
         boundaryType: "reactive",
-        velocityThreshold: 3,
 }}>
   <h3>{title}</h3>
   <p>{description}</p>

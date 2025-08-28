@@ -1,6 +1,5 @@
-/**
- * CanvasManager - Centralized canvas sizing and memory management
- * Handles dynamic height calculation, devicePixelRatio optimization, and memory monitoring
+/*
+ * CanvasManager: Handles dynamic height calculation, devicePixelRatio optimization, and memory monitoring
  */
 export class CanvasManager {
   constructor(canvasElement, options = {}) {
@@ -11,50 +10,42 @@ export class CanvasManager {
       ...options
     };
 
-    // Cached dimensions to avoid unnecessary updates
     this.lastWidth = 0;
     this.lastHeight = 0;
 
-    // ResizeObserver and event listeners
     this.resizeObserver = null;
     this.eventCleanupFns = [];
 
-    this.log = this.options.debug ? console.log : () => { };
   }
 
-  /**
-   * Calculate the optimal canvas height (main element height)
+  /*
+   * Calculate optimal canvas height ( equal to <main> height)
    */
   calculateCanvasHeight() {
-    // Use main element's parent dimensions since canvas is positioned inside main
     const parent = this.canvas.parentElement;
     if (!parent) {
       return window.innerHeight;
     }
 
     const parentHeight = parent.offsetHeight;
-    this.log('CanvasManager - Using parent element height:', parentHeight);
     return parentHeight;
   }
 
-  /**
-   * Calculate the optimal canvas width (main element width)
+  /*
+   * Calculate optimal canvas width ( equal to <main> width)
    */
   calculateCanvasWidth() {
-    // Use main element's parent dimensions since canvas is positioned inside main
     const parent = this.canvas.parentElement;
     if (!parent) {
       return window.innerWidth;
     }
 
     const parentWidth = parent.offsetWidth;
-    this.log('CanvasManager - Using parent element width:', parentWidth);
     return parentWidth;
   }
 
-  /**
+  /*
    * Update canvas dimensions if they've changed
-   * Returns true if dimensions were updated, false if no change
    */
   updateCanvasSize() {
     if (!this.canvas) return false;
@@ -62,13 +53,10 @@ export class CanvasManager {
     const newWidth = this.calculateCanvasWidth();
     const newHeight = this.calculateCanvasHeight();
 
-    // Skip update if dimensions haven't changed (performance optimization)
     if (newWidth === this.lastWidth && newHeight === this.lastHeight) {
-      this.log('CanvasManager - No size change, skipping update');
       return false;
     }
 
-    // Update canvas drawing buffer size
     this.canvas.width = newWidth;
     this.canvas.height = newHeight;
 
@@ -76,24 +64,20 @@ export class CanvasManager {
     this.canvas.style.width = `${newWidth}px`;
     this.canvas.style.height = `${newHeight}px`;
 
-    // Cache the new dimensions
     this.lastWidth = newWidth;
     this.lastHeight = newHeight;
 
-    this.log(`CanvasManager - Canvas updated: ${newWidth}x${newHeight}px`);
     return true;
   }
 
-  /**
+  /*
    * Set up observers and event listeners for canvas resizing
    */
   startWatching() {
     if (!this.canvas) {
-      console.error('CanvasManager - No canvas element provided');
       return;
     }
 
-    // Initial size update
     this.updateCanvasSize();
 
     // Set up ResizeObserver for efficient size monitoring
@@ -101,40 +85,22 @@ export class CanvasManager {
       this.updateCanvasSize();
     });
 
-    // Observe the parent element (main) for size changes
+    // Observe <main> for size changes
     const parent = this.canvas.parentElement;
     if (parent) {
       this.resizeObserver.observe(parent);
-    } else {
-      // Fallback to document element if no parent
-      this.resizeObserver.observe(document.documentElement);
-    }
-
-    // Set up event listeners for cases ResizeObserver might miss
-    const onResize = () => this.updateCanvasSize();
-    const onScroll = () => this.updateCanvasSize();
-
-    window.addEventListener('resize', onResize, { passive: true });
-    window.addEventListener('scroll', onScroll, { passive: true });
-
-    // Store cleanup functions
-    this.eventCleanupFns.push(() => window.removeEventListener('resize', onResize));
-    this.eventCleanupFns.push(() => window.removeEventListener('scroll', onScroll));
-
-    this.log('CanvasManager - Started watching for size changes');
+    };
   }
 
   /**
    * Stop watching for canvas size changes and cleanup resources
    */
   stopWatching() {
-    // Disconnect ResizeObserver
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
       this.resizeObserver = null;
     }
 
-    // Clean up event listeners
     this.eventCleanupFns.forEach(cleanup => {
       try {
         cleanup();
@@ -144,10 +110,9 @@ export class CanvasManager {
     });
     this.eventCleanupFns = [];
 
-    this.log('CanvasManager - Stopped watching for size changes');
   }
 
-  /**
+  /*
    * Get current canvas dimensions
    */
   getDimensions() {
@@ -157,7 +122,7 @@ export class CanvasManager {
     };
   }
 
-  /**
+  /*
    * Force a canvas size update (useful for manual triggers)
    */
   forceUpdate() {
