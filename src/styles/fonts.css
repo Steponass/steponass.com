@@ -53,7 +53,9 @@ button {
 }
 
 :where(h6, h5, h4, h3, h2, h1) {
-  line-height: 1.2;
+  line-height: 1.1;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 :where(p) {

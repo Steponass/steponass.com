@@ -126,7 +126,7 @@
   .footer-section {
     display: flex;
     gap: 10%;
-    padding-inline: 5%;
+    padding-inline: 4%;
     padding-block: var(--space-32-48px);
     background-color: black;
     color: white;

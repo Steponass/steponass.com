@@ -32,7 +32,7 @@
 <style>
   .skills-section {
     width: 100%;
-    padding-inline: 5%;
+    padding-inline: 4%;
   }
 
   .section-title-container {

@@ -9,18 +9,21 @@
 
 <section id="cta" class="cta-section">
   <div class="section-title-container">
-    <h2 class="cta-title section-title"
-    use:physicsRegister={{
-      restitution: 1,
-      friction: 0.2,
-      label: "cta-title",
-      shape: "text-rectangle",
-    }}
-    use:scrollAnimation>Interested?</h2>
+    <h2
+      class="cta-title section-title"
+      use:physicsRegister={{
+        restitution: 1,
+        friction: 0.2,
+        label: "cta-title",
+        shape: "text-rectangle",
+      }}
+      use:scrollAnimation
+    >
+      Interested?
+    </h2>
   </div>
 
-  <div class="cta-container">
-    <h2
+  <h2
     class="cta-heading"
     use:physicsRegister={{
       restitution: 1,
@@ -28,9 +31,13 @@
       label: "hero-title",
       shape: "text-rectangle",
       boundaryType: "reactive",
-    }}>Let's connect!</h2>
+    }}
+    use:scrollAnimation
+  >
+    Let's connect!
+  </h2>
 
-    <!-- <button
+  <!-- <button
       class="cta-button"
       use:physicsRegister={{
         restitution: 0.8,
@@ -41,7 +48,6 @@
     >
       Get In Touch
     </button> -->
-  </div>
 </section>
 
 <style>
@@ -49,7 +55,7 @@
     width: 100%;
     /* aspect-ratio: 3/1; */
     padding-block: var(--space-64-96px);
-    padding-inline: 5%;
+    padding-inline: 4%;
   }
 
   .section-title-container {
@@ -64,6 +70,33 @@
     width: fit-content;
     margin-inline: auto;
     margin-block: var(--space-64-96px);
+    text-shadow: 0 0 none;
+    transition: all 0.4s 1s ease;
+    transform: translateY(0);
+  }
+
+  .cta-heading:global(.animate-in-view) {
+    text-shadow: 0 3px 30px orange;
+    transform: translateY(-4px);
+    animation: ctaShadowPulse 5s ease-in-out 0.2s infinite;
+  }
+
+  @keyframes ctaShadowPulse {
+    0% {
+      text-shadow:
+        0 3px 12px rgba(255, 165, 0, 0.5),
+        0 0 0 rgba(255, 165, 0, 0);
+    }
+    50% {
+      text-shadow:
+        0 6px 28px rgba(255, 165, 0, 0.9),
+        0 0 24px rgba(255, 165, 0, 0.4);
+    }
+    100% {
+      text-shadow:
+        0 3px 12px rgba(255, 165, 0, 0.5),
+        0 0 0 rgba(255, 165, 0, 0);
+    }
   }
 
   /* .cta-button {

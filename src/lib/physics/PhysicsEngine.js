@@ -247,9 +247,9 @@ export class PhysicsEngine {
   getBallColor(visualState) {
     switch (visualState) {
       case 'hovered':
-        return '#F53D3F';
+        return '#C20A0C';
       case 'dragged':
-        return '#CC2426';
+        return '#6E1C1D';
       default:
         return '#E73C3E'; // Default color
     }
@@ -584,7 +584,7 @@ export class PhysicsEngine {
           fillStyle: 'transparent'
         },
         restitution: 1, // Bounciness (0 = no bounce, 1 = perfect bounce)
-        friction: 0.1      // Surface friction (affects sliding)
+        friction: 0.01      // Surface friction (affects sliding)
       });
 
       return boundary;
@@ -695,10 +695,10 @@ export class PhysicsEngine {
     try {
       const ball = Matter.Bodies.circle(x, y, radius, {
         // Physical properties that affect how the ball behaves
-        restitution: 1,    // Bounciness (0.7 = fairly bouncy)
-        friction: 0.01,      // Surface friction (low = rolls easily) 
-        frictionAir: 0.01,   // Air resistance (prevents infinite bouncing)
-        density: 0.01,      // Mass per unit area (affects how heavy it feels)
+        restitution: 0.95,    // Bounciness (0.7 = fairly bouncy)
+        friction: 0.002,      // Surface friction (low = rolls easily) 
+        frictionAir: 0.008,   // Air resistance (prevents infinite bouncing)
+        density: 0.005,      // Mass per unit area (affects how heavy it feels)
         render: {
           fillStyle: '#E73C3E'
         },
