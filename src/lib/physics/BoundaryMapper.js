@@ -257,8 +257,7 @@ export class BoundaryMapper {
         Matter.Body.scale(body, scaleX, 1);
 
       } else if (shape === 'text-rectangle') {
-        // Rectangle with 80% height for better text collision boundaries
-        const adjustedHeight = rect.height * 0.65;
+        const adjustedHeight = rect.height * 0.61;
         body = Matter.Bodies.rectangle(
           centerX,
           centerY,
@@ -266,7 +265,6 @@ export class BoundaryMapper {
           adjustedHeight,
           defaultOptions
         );
-
       } else {
         // Default rectangular boundary
         body = Matter.Bodies.rectangle(

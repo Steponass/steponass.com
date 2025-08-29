@@ -27,7 +27,7 @@
   class:rotated={shape === "rotated"}
   use:physicsRegister={{
     restitution: 0.8,
-    friction: 0.2,
+    friction: 0.1,
     boundaryType: "reactive",
     reactionConfig: BLUR_SHADOW_REACTION_CONFIG,
     label: "project-card",

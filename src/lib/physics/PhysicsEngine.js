@@ -584,7 +584,7 @@ export class PhysicsEngine {
           fillStyle: 'transparent'
         },
         restitution: 1, // Bounciness (0 = no bounce, 1 = perfect bounce)
-        friction: 0.3      // Surface friction (affects sliding)
+        friction: 0.1      // Surface friction (affects sliding)
       });
 
       return boundary;

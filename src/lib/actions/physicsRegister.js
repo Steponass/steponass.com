@@ -40,7 +40,7 @@ export function physicsRegister(element, options = {}) {
   boundaryId = generateId();
   registrationTimeout = setTimeout(() => {
     register();
-  }, 500);
+  }, 1200);
 
   return {
     update(newOptions) {
