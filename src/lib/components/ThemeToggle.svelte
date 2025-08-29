@@ -59,12 +59,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.4s ease;
+    transition: all 0.4s ease;
     min-width: var(--space-32px);
     min-height: var(--space-32px);
     color: var(--clr-txt-strong);
     &:hover {
-      background-color: rgba(0, 0, 0, 0.1);
+      transform: rotate(25deg);
+      scale: 1.2;
     }
     &:focus-visible {
       outline: 2px solid var(--clr-primary);

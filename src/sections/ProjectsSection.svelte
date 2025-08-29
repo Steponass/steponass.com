@@ -37,7 +37,7 @@
           title={project.title}
           description={project.description}
           techStack={project.techStack}
-          shape={project.gridArea === "item7" ? "rotated" : "default"}
+          shape={project.gridArea === "item6" ? "rotated" : "default"}
           onOpenModal={handleOpenModal}
         />
       </div>
@@ -64,7 +64,7 @@
 
 <style>
   .projects-section {
-    padding-inline: 5%;
+    padding-inline: 4%;
     box-sizing: border-box;
   }
 
@@ -79,17 +79,12 @@
   .projects-container {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    grid-template-rows: 1fr 1fr 1fr 1fr 1fr;
-    gap: var(--space-96px);
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: var(--space-64px);
     grid-template-areas:
       "item1 item1 item2"
-      "item3 . item2"
-      "item3 item4 item4"
-      "item5 item5 item7"
-      "item6 item6 item7";
-    min-height: 80vh;
-    width: 100%;
-    box-sizing: border-box;
+      "item3 item5 item2"
+      "item3 item4 item4";
   }
 
   .project-cell {
@@ -111,12 +106,6 @@
   }
   .project-cell[style*="item5"] {
     grid-area: item5;
-  }
-  .project-cell[style*="item6"] {
-    grid-area: item6;
-  }
-  .project-cell[style*="item7"] {
-    grid-area: item7;
   }
 
   /* Modal placeholder styles - will be replaced with proper modal later */
@@ -155,20 +144,18 @@
   }
 
   /* Tablet breakpoint - 2 column layout */
-  @media (max-width: 1200px) and (min-width: 769px) {
+  @media (max-width: 1600px) and (min-width: 769px) {
     .projects-container {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr;
       grid-template-areas:
         "item1 item2"
-        "item3 item2"
-        "item3 item4"
-        "item5 item4"
-        "item5 item7"
-        "item6 item7";
-      gap: 8%;
+        "item1 item2"
+        "item3 item3"
+        "item4 item5"
+        "item4 item5";
       /* Temporary margin for grid testing */
-      margin-bottom: 300px;
+      margin-bottom: 100px;
     }
   }
 
@@ -176,16 +163,13 @@
   @media (max-width: 768px) {
     .projects-container {
       grid-template-columns: 1fr;
-      grid-template-rows: repeat(7, auto);
+      grid-template-rows: repeat(5, auto);
       grid-template-areas:
         "item1"
         "item2"
         "item3"
         "item4"
-        "item5"
-        "item6"
-        "item7";
-      gap: var(--space-24-32px);
+        "item5";
       min-height: auto;
     }
 
@@ -193,7 +177,6 @@
     .project-cell :global(.project-card) {
       width: 100%;
       aspect-ratio: 1 / 1;
-      height: auto;
       min-height: 0;
     }
 
@@ -201,5 +184,6 @@
     .project-cell > :global(*) {
       max-width: 90%;
     }
+    
   }
 </style>

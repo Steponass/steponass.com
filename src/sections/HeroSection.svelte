@@ -21,7 +21,6 @@
 </script>
 
 <section class="hero-section">
-  <div class="hero-content">
     <h1
       class="hero-heading"
       use:physicsRegister={{
@@ -59,36 +58,29 @@
       {#if canRelease}
         I like to party
       {:else}
-        Need more balls
+        Need more balls!
       {/if}
     </button>
-  </div>
 </section>
 
 <style>
   .hero-section {
     display: flex;
+    flex-direction: column;
     align-items: center;
+    text-align: center;
     justify-content: center;
     padding-top: 156px;
     padding-bottom: var(--space-64-96px);
   }
 
-  .hero-content {
-    width: min(900px, 60%);
-    text-align: center;
-  }
-
   .hero-heading {
-    width: fit-content;
-    margin-inline: auto;
+    padding-block: var(--space-8-12px);
     translate: 0 0;
-    /* clip-path: inset(0 0 0% 0); */
     transition: all 0.5s ease;
     scale: 1;
     @starting-style {
       translate: 0 -100%;
-      /* clip-path: inset(100% 0 0 0); */
       scale: 0;
     }
   }
@@ -96,24 +88,36 @@
     transition: all 0.5s 1s ease;
     @starting-style {
       translate: 0 100%;
-      /* clip-path: inset(0 0 100% 0); */
     }
   }
-
 
   .release-button {
     padding: var(--space-12px) var(--space-24px);
     margin-top: var(--space-24-32px);
     border-radius: var(--radius-4px);
+    background-color: var(--clr-primary);
     cursor: pointer;
     opacity: 1;
     translate: 0 0;
     clip-path: inset(0 0 0% 0);
     transition: all 0.4s 1.9s ease;
+    &:disabled {
+    /*--clr-ball-dragged, used only as # in physicsEngine */
+      color: #CC2426;
+       }
     @starting-style {
       opacity: 0;
       translate: -50% 0;
       clip-path: inset(0 0 0 100%);
+    }
+  }
+
+  @media (max-width: 568px) {
+    .hero-heading {
+      max-width: 6ch;
+    }
+    .hero-heading-bottom {
+      max-width: 7ch;
     }
   }
 </style>

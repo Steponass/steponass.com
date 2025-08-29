@@ -36,15 +36,15 @@
 :root,
 :root[data-theme="light"] {
   --clr-primary: oklch(0.8703 0.176 91.91);
-  --clr-bg: oklch(0.9789 0.0013 106.42);
+  --clr-bg: oklch(0.9899 0.0164 95.22);
   --clr-txt-strong: oklch(0.1339 0.0026 106.74);
   --clr-txt-weak: oklch(0.2761 0.0091 97.67);
 }
 
 /* DARK THEME  */
 :root[data-theme="dark"] {
-  --clr-primary: oklch(0.8823 0.168 93.84);
-  --clr-bg: oklch(0.2431 0.0076 95.37);
+  --clr-primary: oklch(0.8715 0.174 92.47);
+  --clr-bg: oklch(0.1961 0.0042 84.59);
   --clr-txt-strong: oklch(0.9856 0.0017 67.8);
   --clr-txt-weak: oklch(0.9301 0.0081 98.88);
 }
