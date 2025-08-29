@@ -82,19 +82,22 @@
   .hero-heading {
     width: fit-content;
     margin-inline: auto;
-    opacity: 1;
+    translate: 0 0;
+    /* clip-path: inset(0 0 0% 0); */
+    transition: all 0.5s ease;
     scale: 1;
-    transform: rotate(0deg);
-    transition: all 0.4s ease;
     @starting-style {
-      opacity: 0;
-      scale: 0.3;
-      translate: 0 30px;
-      transform: rotate(-45deg);
+      translate: 0 -100%;
+      /* clip-path: inset(100% 0 0 0); */
+      scale: 0;
     }
   }
   .hero-heading-bottom {
-    transition: all 0.4s 0.8s ease;
+    transition: all 0.5s 1s ease;
+    @starting-style {
+      translate: 0 100%;
+      /* clip-path: inset(0 0 100% 0); */
+    }
   }
 
 
@@ -104,9 +107,13 @@
     border-radius: var(--radius-4px);
     cursor: pointer;
     opacity: 1;
-    transition: all 0.3s 1.9s ease;
+    translate: 0 0;
+    clip-path: inset(0 0 0% 0);
+    transition: all 0.4s 1.9s ease;
     @starting-style {
       opacity: 0;
+      translate: -50% 0;
+      clip-path: inset(0 0 0 100%);
     }
   }
 </style>

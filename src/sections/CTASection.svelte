@@ -1,5 +1,6 @@
 <script>
   import { physicsRegister } from "@lib/actions/physicsRegister.js";
+  import { scrollAnimation } from "@lib/actions/scrollAnimation.js";
 
   function handleCtaClick() {
     console.log("CTA button clicked");
@@ -8,13 +9,14 @@
 
 <section id="cta" class="cta-section">
   <div class="section-title-container">
-    <h2 class="cta-title"
+    <h2 class="cta-title section-title"
     use:physicsRegister={{
       restitution: 1,
       friction: 0.2,
       label: "cta-title",
       shape: "text-rectangle",
-    }}>Aroused?</h2>
+    }}
+    use:scrollAnimation>Interested?</h2>
   </div>
 
   <div class="cta-container">
@@ -26,10 +28,9 @@
       label: "hero-title",
       shape: "text-rectangle",
       boundaryType: "reactive",
-    }}>Let's do it to it</h2>
-    <p>Buzz me, mellow.</p>
+    }}>Let's connect!</h2>
 
-    <button
+    <!-- <button
       class="cta-button"
       use:physicsRegister={{
         restitution: 0.8,
@@ -39,13 +40,14 @@
       on:click={handleCtaClick}
     >
       Get In Touch
-    </button>
+    </button> -->
   </div>
 </section>
 
 <style>
   .cta-section {
     width: 100%;
+    /* aspect-ratio: 3/1; */
     padding-block: var(--space-64-96px);
     padding-inline: 5%;
   }
@@ -58,24 +60,17 @@
     width: fit-content;
   }
 
-  .cta-container {
-    width: min(900px, 60%);
-    margin: 0 auto;
-    border-radius: var(--radius-8px);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 2%;
-    gap: var(--space-8-12px);
+  .cta-heading {
+    width: fit-content;
+    margin-inline: auto;
+    margin-block: var(--space-64-96px);
   }
 
-  .cta-button {
+  /* .cta-button {
     padding: 1.5% 5%;
     border-radius: var(radius-2px);
     background: none;
     cursor: pointer;
     transition: transform 0.2s ease;
-  }
+  } */
 </style>

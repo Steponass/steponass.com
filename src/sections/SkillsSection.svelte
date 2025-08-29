@@ -2,6 +2,7 @@
     import { skills } from "@lib/data/skillsData.js";
   import SkillCard from "@components/SkillCard.svelte";
   import { physicsRegister } from "@lib/actions/physicsRegister.js";
+  import { scrollAnimation } from "@lib/actions/scrollAnimation.js";
 
 
 
@@ -9,13 +10,14 @@
 
 <section class="skills-section" id="skills">
   <div class="section-title-container">
-    <h2 class="skills-title"
+    <h2 class="skills-title section-title"
     use:physicsRegister={{
       restitution: 0.8,
       friction: 0.2,
       label: "skills-title",
       shape: "text-rectangle",
-    }}>
+    }}
+    use:scrollAnimation>
     Skills</h2>
   </div>
   <div class="skills-container">

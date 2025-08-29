@@ -2,6 +2,7 @@
     import { projects } from "@lib/data/projectsData.js";
   import ProjectCard from "@/lib/components/ProjectCard.svelte";
   import { physicsRegister } from "@lib/actions/physicsRegister.js";
+  import { scrollAnimation } from "@lib/actions/scrollAnimation.js";
 
   let activeModal = null;
 
@@ -19,13 +20,14 @@
   <div
   class="section-title-container">
     <h2
-    class="projects-title"
+    class="projects-title section-title"
     use:physicsRegister={{
       restitution: 0.8,
       friction: 0.2,
       label: "projects-title",
       shape: "text-rectangle",
-    }}>Projects</h2>
+    }}
+    use:scrollAnimation>Projects</h2>
   </div>
 
   <div class="projects-container">
@@ -72,6 +74,7 @@
 
   .projects-title {
     width: fit-content;
+    transition: all 0.4s 3s ease;
   }
   .projects-container {
     display: grid;

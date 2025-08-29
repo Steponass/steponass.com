@@ -22,8 +22,6 @@
 
 <div
   class="project-card"
-  class:square={shape === "square"}
-  class:rectangle={shape === "rectangle"}
   class:rotated={shape === "rotated"}
   use:physicsRegister={{
     restitution: 0.8,
@@ -61,14 +59,6 @@
     cursor: pointer;
     position: relative;
     transition: transform 0.2s ease-in-out;
-  }
-
-  .square {
-    aspect-ratio: 1 / 1;
-  }
-
-  .rectangle {
-    aspect-ratio: 16 / 9;
   }
 
   .rotated .card-content {

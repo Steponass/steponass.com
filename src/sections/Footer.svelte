@@ -59,7 +59,7 @@
       <li>
         <div class="contact-icon">
           <svg
-            class="icon"
+            class="icon icon-github"
             xmlns="http://www.w3.org/2000/svg"
             width="96"
             height="96"
@@ -81,7 +81,7 @@
       <li>
         <div class="contact-icon">
           <svg
-            class="icon"
+            class="icon icon-linkedin"
             xmlns="http://www.w3.org/2000/svg"
             width="96"
             height="96"
@@ -101,7 +101,7 @@
       <li>
         <div class="contact-icon">
           <svg
-            class="icon"
+            class="icon icon-whatsapp"
             xmlns="http://www.w3.org/2000/svg"
             width="96"
             height="96"
@@ -113,7 +113,7 @@
           </svg>
         </div>
         <a
-          href="https://wa.me/your-number"
+          href="https://wa.me/37065765535"
           target="_blank"
           rel="noopener noreferrer">Buzz me, mellow</a
         >
@@ -147,18 +147,22 @@
   a {
     text-decoration: underline;
     transition: all 0.3 ease-in-out;
+    @media (hover: hover){
     &:hover {
       color: var(--clr-primary);
+      text-decoration: none;
     }
+  }
   }
 
   .contact-list {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-16-24px);
+    gap: var(--space-32px);
   }
 
   .contact-list li {
+    max-width: 270px;
     display: flex;
     align-items: center;
     gap: var(--space-12-16px);
@@ -177,7 +181,7 @@
     width: 100%;
     height: 100%;
     fill: white;
-    transition: fill 0.3s ease;
+    transition: all 0.3s ease;
   }
 
   .email-icon,
@@ -190,11 +194,31 @@
     top: 0;
     left: 0;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: all 0.3s ease;
   }
 
-  .contact-list li:hover .icon {
+  .contact-list li:hover .email-icon-hover {
     fill: var(--clr-primary);
+    transform: rotate(3deg);
+    scale: 1.3;
+  }
+
+  .contact-list li:hover .icon-linkedin {
+    fill: var(--clr-primary);
+    transform: rotate(-3deg);
+    scale: 1.1;
+  }
+
+  .contact-list li:hover .icon-github {
+    fill: var(--clr-primary);
+    transform: rotate(-6deg);
+    scale: 1.1;
+  }
+  
+  .contact-list li:hover .icon-whatsapp {
+    fill: var(--clr-primary);
+    transform: rotate(6deg);
+    scale: 1.1;
   }
 
   .contact-list li:hover .email-icon-hover {
