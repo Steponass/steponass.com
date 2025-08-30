@@ -23,7 +23,7 @@
     </h2>
   </div>
 
-  <h3
+  <h2
     class="cta-heading"
     use:physicsRegister={{
       restitution: 1,
@@ -35,7 +35,7 @@
     use:scrollAnimation
   >
     Let's connect!
-  </h3>
+  </h2>
 
   <!-- <button
       class="cta-button"

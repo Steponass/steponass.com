@@ -35,49 +35,48 @@
 /* LIGHT THEME (default) */
 [data-theme="light"] {
   --clr-primary: oklch(0.8703 0.176 91.91);
-  --clr-bg-base:   hsl(48, 100%, 96%);
+  --clr-bg-base: hsl(48, 100%, 96%);
   --clr-bg-raised: hsl(48, 100%, 97%);
-  --clr-bg-overlay:hsl(48, 100%, 98%);
-
-
+  --clr-bg-overlay: hsl(48, 100%, 98%);
+  --clr-bg: oklch(0.9899 0.0164 95.22);
   --clr-txt-strong: oklch(0.1339 0.0026 106.74);
   --clr-txt-weak: oklch(0.2652 0.0079 84.59);
   --clr-stroke-strong: hsl(48, 50%, 65%);
-  --clr-stroke-weak:   hsl(48, 29%, 80%);
+  --clr-stroke-weak: hsl(48, 29%, 80%);
 
   /* SHADOWS */
-/* 1st - "direct"
+  /* 1st - "direct"
    2nd - "ambient" */
 
-   /* TBD */
-  --shadow-elevation-1: 
-  0    2px 3px -1px hsla(0, 0%, 26%, 0.3),
-  0 -0.5px 1px      hsla(0, 0%, 10%, 0.1);
+  /* TBD */
+  --shadow-elevation-1:
+    0 2px 3px -1px hsla(0, 0%, 26%, 0.3),
+    0 -0.5px 1px hsla(0, 0%, 10%, 0.1);
 
 
   /* Divs with physics boundaries */
---shadow-elevation-2: 
-  0 4px 6px hsla(0, 0%, 25%, 0.15),
-  0 3px 1px -1px hsla(0, 0%, 18%, 0.5);
+  --shadow-elevation-2:
+    0 4px 6px hsla(0, 0%, 25%, 0.15),
+    0 3px 1px -1px hsla(0, 0%, 18%, 0.5);
 
   /* Header (sign; strings use el-1) */
---shadow-elevation-3: 
-  0 4px 8px -1px hsla(0, 0%, 30%, 0.15),
-  0  2px 3px -1px hsla(0, 0%, 16%, 0.4);
+  --shadow-elevation-3:
+    0 4px 8px -1px hsla(0, 0%, 30%, 0.15),
+    0 2px 3px -1px hsla(0, 0%, 16%, 0.4);
 
-     /* TBD */
---shadow-elevation-4: 
-  0 8px 16px hsla(0, 0%, 16%, 0.35),
-  0 3px  6px hsla(0, 0%, 12%, 0.15);
+  /* TBD */
+  --shadow-elevation-4:
+    0 8px 16px hsla(0, 0%, 16%, 0.35),
+    0 3px 6px hsla(0, 0%, 12%, 0.15);
 
-   /* TBD - prolly modal/dialog*/
---shadow-elevation-5: 
-  0 10px 16px -3px hsla(0, 0%, 30%, 0.4);
+  /* TBD - prolly modal/dialog*/
+  --shadow-elevation-5:
+    0 10px 16px -3px hsla(0, 0%, 30%, 0.4);
 
   /* Section titles */
---text-shadow-1:
-  0    1px 3px hsla(0, 0%, 26%, 0.1),
-  0 1px 0px      hsla(320, 91%, 17%, 0.651);
+  --text-shadow-1:
+    0 1px 3px hsla(0, 0%, 26%, 0.1),
+    0 1px 0px hsla(320, 91%, 17%, 0.651);
 
 }
 
@@ -86,10 +85,11 @@
   --clr-primary: oklch(0.8715 0.174 92.47);
   --clr-bg-base: oklch(0.1961 0.0039 95.26);
   --clr-bg-raised: hsl(48, 6%, 12%);
-  --clr-bg-overlay:hsl(48, 6%, 16%);
+  --clr-bg-overlay: hsl(48, 6%, 16%);
+  --clr-bg: oklch(0.1961 0.0042 84.59);
   --clr-stroke-strong: hsl(48, 60%, 20%);
-  --clr-stroke-weak:   hsl(48, 60%, 15%);
-  
+  --clr-stroke-weak: hsl(48, 60%, 15%);
+
   --clr-txt-strong: oklch(0.9875 0.0026 106.45);
   --clr-txt-weak: oklch(0.9299 0.0084 95.14);
 }
@@ -108,7 +108,7 @@
   --space-48px: 48px;
   --space-64px: 64px;
   --space-96px: 96px;
-  
+
   /* Fluid Spacing: https://utopia.fyi/space/calculator/?c=375,16,1.25,1920,16,1.333,5,2,&s=0.75|0.5|0.25,1.5|2|3|4|6,s-l&g=s,l,xl,12 */
   --space-4-8px: clamp(4px, 3.0291px + 0.2589vw, 8px);
   --space-8-12px: clamp(8px, 7.0291px + 0.2589vw, 12px);

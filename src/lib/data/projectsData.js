@@ -24,14 +24,18 @@ export const projects = [
   {
     id: 4,
     title: "Mystify Me",
-    description: "A gamified experience that uses microphone input for interaction.",
+    description:
+      "A personal project where I scratched my creative itch while deepening knowledge of React + global state mgmt",
     techStack: ["React", "Zustand", "GSAP"],
     gridArea: "item3",
   },
   {
     id: 5,
     title: "Our Project?",
-    description: "…This could the beginning of something interesting!",
-    gridArea: "item5",
-  }
-]
+    description: "…This could be something beautiful!",
+    techStack: ["Framework", "Library", "Database"],
+    gridArea: "item7",
+  },
+];
+
+

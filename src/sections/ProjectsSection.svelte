@@ -1,5 +1,5 @@
 <script>
-    import { projects } from "@lib/data/projectsData.js";
+  import { projects } from "@lib/data/projectsData.js";
   import ProjectCard from "@/lib/components/ProjectCard.svelte";
   import { physicsRegister } from "@lib/actions/physicsRegister.js";
   import { scrollAnimation } from "@lib/actions/scrollAnimation.js";
@@ -13,21 +13,22 @@
   function closeModal() {
     activeModal = null;
   }
-
 </script>
 
 <section class="projects-section" id="projects">
-  <div
-  class="section-title-container">
+  <div class="section-title-container">
     <h2
-    class="projects-title section-title"
-    use:physicsRegister={{
-      restitution: 0.8,
-      friction: 0.2,
-      label: "projects-title",
-      shape: "text-rectangle",
-    }}
-    use:scrollAnimation>Projects</h2>
+      class="projects-title section-title"
+      use:physicsRegister={{
+        restitution: 0.8,
+        friction: 0.2,
+        label: "projects-title",
+        shape: "text-rectangle",
+      }}
+      use:scrollAnimation
+    >
+      Projects
+    </h2>
   </div>
 
   <div class="projects-container">
@@ -36,6 +37,7 @@
         <ProjectCard
           title={project.title}
           description={project.description}
+          techStack={project.techStack}
           shape={project.gridArea === "item6" ? "rotated" : "default"}
           onOpenModal={handleOpenModal}
         />
@@ -183,6 +185,5 @@
     .project-cell > :global(*) {
       max-width: 90%;
     }
-    
   }
 </style>

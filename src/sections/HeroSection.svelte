@@ -21,46 +21,46 @@
 </script>
 
 <section class="hero-section">
-    <h1
-      class="hero-heading"
-      use:physicsRegister={{
-        restitution: 0.8,
-        friction: 0.2,
-        label: "hero-title",
-        shape: "text-rectangle",
-      }}
-    >
-      Hey, I'm Step!
-    </h1>
-    <h1
-      class="hero-heading hero-heading-bottom"
-      use:physicsRegister={{
-        restitution: 0.8,
-        friction: 0.2,
-        label: "hero-title",
-        shape: "text-rectangle",
-      }}
-    >
-      I do web stuff
-    </h1>
-    <button
-      class="release-button"
-      use:physicsRegister={{
-        restitution: 0.8,
-        friction: 0.2,
-        label: "release-button",
-      }}
-      class:ready={canRelease}
-      class:disabled={!canRelease}
-      on:click={handleReleaseBall}
-      disabled={!canRelease}
-    >
-      {#if canRelease}
-        I like to party
-      {:else}
-        Need more balls!
-      {/if}
-    </button>
+  <h1
+    class="hero-heading"
+    use:physicsRegister={{
+      restitution: 0.8,
+      friction: 0.2,
+      label: "hero-title",
+      shape: "text-rectangle",
+    }}
+  >
+    Hey, I'm Step!
+  </h1>
+  <h1
+    class="hero-heading hero-heading-bottom"
+    use:physicsRegister={{
+      restitution: 0.8,
+      friction: 0.2,
+      label: "hero-title",
+      shape: "text-rectangle",
+    }}
+  >
+    I do web stuff
+  </h1>
+  <button
+    class="release-button"
+    use:physicsRegister={{
+      restitution: 0.8,
+      friction: 0.2,
+      label: "release-button",
+    }}
+    class:ready={canRelease}
+    class:disabled={!canRelease}
+    on:click={handleReleaseBall}
+    disabled={!canRelease}
+  >
+    {#if canRelease}
+      I like to party
+    {:else}
+      Need more balls!
+    {/if}
+  </button>
 </section>
 
 <style>
@@ -105,9 +105,9 @@
     clip-path: inset(0 0 -10% 0);
     transition: all 0.4s 1.9s ease;
     &:disabled {
-    /*--clr-ball-dragged, used only as # in physicsEngine */
-      color: #CC2426;
-       }
+      /*--clr-ball-dragged, used only as # in physicsEngine */
+      color: #cc2426;
+    }
     @starting-style {
       opacity: 0;
       translate: -50% 0;
