@@ -4,12 +4,14 @@
 
   export let title = "Project Title";
   export let description = "Project description goes here.";
-  export let shape = "rectangle";
   export let projectData = null;
   export let onOpenModal = null;
 
+  // Destructure projectData safely
+  $: ({ shape: actualShape, isDecorative } = projectData);
+
   function handleCardClick() {
-    if (onOpenModal && projectData) {
+    if (onOpenModal && projectData && !isDecorative) {
       onOpenModal(projectData);
     }
   }
@@ -17,7 +19,8 @@
 
 <div
   class="project-card"
-  class:rotated={shape === "rotated"}
+  class:rotated={actualShape === "rotated"}
+  class:decorative={isDecorative}
   use:physicsRegister={{
     restitution: 0.8,
     friction: 0.1,
@@ -26,8 +29,7 @@
     label: "project-card",
   }}
   on:click={handleCardClick}
-  role="button"
-  tabindex="0"
+  role={isDecorative ? "presentation" : "button"}
   on:keydown={(e) => e.key === "Enter" && handleCardClick()}
 >
   <div class="project-card-content">
@@ -36,7 +38,7 @@
       <p>{description}</p>
     </div>
     <div class="project-card-illustration">
-        <img class="placeholder" alt="pipi">
+      <img class="placeholder" alt="pipi" />
     </div>
   </div>
 </div>
@@ -53,8 +55,16 @@
     container-type: inline-size;
   }
 
+  .project-card.decorative {
+    cursor: default;
+  }
+
+  .project-card.decorative:hover {
+    transform: none;
+  }
+
   .rotated .project-card-content {
-    transform: rotate(-45deg);
+    transform: rotate(-30deg);
     text-align: center;
   }
 
@@ -75,8 +85,8 @@
     .project-card-content {
       grid-template-columns: 1fr;
       grid-template-rows: 1fr 1fr;
-    justify-items: center;
-    align-items: center;
+      justify-items: center;
+      align-items: center;
     }
   }
 

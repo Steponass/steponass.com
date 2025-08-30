@@ -6,7 +6,7 @@
   export let projectData;
   export let onClose;
 
-  const { title, description, techStack, sections } = projectData;
+  const { title, description, overview, sections } = projectData;
 
   function handleKeydown(event) {
     if (event.key === "Escape") {
@@ -52,28 +52,49 @@
       <section class="section overview-section">
         <h1 id="modal-title">{title}</h1>
         <div class="overview-content">
-          <p class="overview-description">{description}</p>
+          {#if overview}
+            <div class="role-info">
+              <strong>Role:</strong>
+              {overview.role}
+            </div>
+            <p class="overview-expanded">{overview.description}</p>
+          {/if}
         </div>
       </section>
 
       <section class="section process-section">
         <h2>Process</h2>
         <div class="section-content">
-          <p>{sections?.process || "Process details coming soon..."}</p>
+          <div class="section-text">
+            <p>
+              {typeof sections?.process === "object"
+                ? sections.process.text
+                : sections?.process}
+            </p>
+          </div>
+          {#if typeof sections?.process === "object" && sections.process.image}
+            <div class="section-image">
+              <img src={sections.process.image} alt="Process illustration" />
+            </div>
+          {/if}
         </div>
       </section>
 
       <section class="section tools-section">
-        <h2>Tools</h2>
+        <h2>Stack</h2>
         <div class="section-content">
           {#if sections?.tools && Array.isArray(sections.tools)}
-            <ul class="tools-list">
+            <div class="tools-grid">
               {#each sections.tools as tool}
-                <li>{tool}</li>
+                <div class="tool-item">
+                  {#if typeof tool === "object" && tool.icon}
+                    <div class="tool-icon">
+                      <img src={tool.icon} alt={tool.name} />
+                    </div>
+                  {/if}
+                </div>
               {/each}
-            </ul>
-          {:else}
-            <p>Tools information coming soon...</p>
+            </div>
           {/if}
         </div>
       </section>
@@ -81,16 +102,43 @@
       <section class="section challenges-section">
         <h2>Challenges</h2>
         <div class="section-content">
-          <p>
-            {sections?.challenges || "Challenges information coming soon..."}
-          </p>
+          <div class="section-text">
+            <p>
+              {typeof sections?.challenges === "object"
+                ? sections.challenges.text
+                : sections?.challenges ||
+                  "Challenges information coming soon..."}
+            </p>
+          </div>
+          {#if typeof sections?.challenges === "object" && sections.challenges.image}
+            <div class="section-image">
+              <img
+                src={sections.challenges.image}
+                alt="Challenges illustration"
+              />
+            </div>
+          {/if}
         </div>
       </section>
 
       <section class="section lessons-section">
         <h2>Lessons</h2>
         <div class="section-content">
-          <p>{sections?.lessons || "Lessons learned coming soon..."}</p>
+          <div class="section-text">
+            <p>
+              {typeof sections?.lessons === "object"
+                ? sections.lessons.text
+                : sections?.lessons || "Lessons learned coming soon..."}
+            </p>
+          </div>
+          {#if typeof sections?.lessons === "object" && sections.lessons.image}
+            <div class="section-image">
+              <img
+                src={sections.lessons.image}
+                alt="Lessons learned illustration"
+              />
+            </div>
+          {/if}
         </div>
       </section>
     </div>
@@ -114,7 +162,7 @@
   .modal-container {
     background: var(--clr-bg-raised);
     border-radius: var(--radius-8px);
-    width: min(98%, 1920px);
+    width: min(98%, 1280px);
     max-height: 95vh;
     overflow-y: auto;
     position: relative;
@@ -135,19 +183,19 @@
 
   .case-study-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 3fr 1fr;
     grid-template-rows: auto auto auto auto;
-    gap: 2rem;
+    gap: var(--space-12-16px);
+    margin-right: var(--space-24-32px);
     grid-template-areas:
       "overview tools"
       "process process"
       "challenges challenges"
       "lessons lessons";
   }
-
-.section-content {
-  max-width: 75ch;
-}
+  .section-content {
+    max-width: 60ch;
+  }
 
   .section {
     padding: var(--space-24-32px);
@@ -173,21 +221,35 @@
     grid-area: lessons;
   }
 
-h1 {
-  font-size: var(--fs-h2);
-}
-h2 {
-  font-size: var(--fs-h3);
-}
+  h1 {
+    font-size: var(--fs-h2);
+  }
+  h2 {
+    font-size: var(--fs-h3);
+  }
 
-  .tools-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  .tool-icon {
+    min-width: 32px;
+    height: 32px;
+  }
+
+  .tool-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .section-content {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
   }
+
+  .section-image {
+    max-width: 100%;
+    border-radius: var(--radius-4px);
+    overflow: hidden;
+  }
+
   /* Responsive adjustment */
   @media (max-width: 768px) {
     .case-study-grid {
@@ -198,6 +260,10 @@ h2 {
         "tools"
         "challenges"
         "lessons";
+    }
+
+    .tools-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>
