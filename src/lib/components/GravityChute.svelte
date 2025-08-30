@@ -10,7 +10,7 @@
   const BALL_SPACING = 43;
 
   $: chuteX = canvasWidth * 0.85; // 15% from right
-  $: chuteY = -(CHUTE_HEIGHT * 0.5); // only bottom 25% visible
+  $: chuteY = -(CHUTE_HEIGHT * 0.25);
 
   $: hasQueuedBalls = $queueLength > 0;
   $: canRelease = $canReleaseBall;
@@ -28,9 +28,11 @@
 <div
   class="gravity-chute"
   use:physicsRegister={{
+    id: "gravity-chute-unique",
     restitution: 0.8,
     friction: 0.2,
     label: "gravity-chute",
+    shape: "rectangle",
   }}
 
   class:has-balls={hasQueuedBalls}

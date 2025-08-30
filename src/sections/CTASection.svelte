@@ -2,9 +2,6 @@
   import { physicsRegister } from "@lib/actions/physicsRegister.js";
   import { scrollAnimation } from "@lib/actions/scrollAnimation.js";
 
-  function handleCtaClick() {
-    console.log("CTA button clicked");
-  }
 </script>
 
 <section id="cta" class="cta-section">
@@ -21,6 +18,17 @@
     >
       Interested?
     </h2>
+    <div
+      class="triangle"
+      use:physicsRegister={{
+        id: "cta-triangle-unique",
+        restitution: 0.8,
+        friction: 0.3,
+        label: "cta-triangle",
+        shape: "triangle",
+      }}
+      use:scrollAnimation
+    ></div>
   </div>
 
   <h2
@@ -36,18 +44,6 @@
   >
     Let's connect!
   </h2>
-
-  <!-- <button
-      class="cta-button"
-      use:physicsRegister={{
-        restitution: 0.8,
-        friction: 0.2,
-        label: "cta-button",
-      }}
-      on:click={handleCtaClick}
-    >
-      Get In Touch
-    </button> -->
 </section>
 
 <style>
@@ -59,11 +55,23 @@
   }
 
   .section-title-container {
-    margin-block: var(--space-32-48px);
+    /* margin-block: var(--space-32-48px); */
+    position: relative;
   }
 
   .cta-title {
     width: fit-content;
+  }
+
+  .triangle {
+    position: absolute;
+    right: -4.5%;
+    top: -9%;
+    width: var(--space-64-96px);
+    aspect-ratio: 1;
+    background: var(--clr-ball-default);
+    clip-path: polygon(100% 0, 0 50%, 100% 100%);
+    transition: transform 0.3s ease;
   }
 
   .cta-heading {

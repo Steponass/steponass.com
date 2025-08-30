@@ -5,16 +5,12 @@
   export let title = "Project Title";
   export let description = "Project description goes here.";
   export let shape = "rectangle";
-  export let techStack = [];
+  export let projectData = null;
   export let onOpenModal = null;
 
   function handleCardClick() {
-    if (onOpenModal) {
-      onOpenModal({
-        title,
-        description,
-        techStack,
-      });
+    if (onOpenModal && projectData) {
+      onOpenModal(projectData);
     }
   }
 </script>

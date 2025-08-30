@@ -80,6 +80,11 @@
 
 }
 
+
+:root {
+  --clr-ball-default: oklch(0.6153 0.2075 25.22);
+}
+
 /* DARK THEME  */
 :root[data-theme="dark"] {
   --clr-primary: oklch(0.8715 0.174 92.47);
@@ -89,7 +94,6 @@
   --clr-bg: oklch(0.1961 0.0042 84.59);
   --clr-stroke-strong: hsl(48, 60%, 20%);
   --clr-stroke-weak: hsl(48, 60%, 15%);
-
   --clr-txt-strong: oklch(0.9875 0.0026 106.45);
   --clr-txt-weak: oklch(0.9299 0.0084 95.14);
 }

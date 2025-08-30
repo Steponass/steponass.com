@@ -265,6 +265,12 @@ export class BoundaryMapper {
           adjustedHeight,
           defaultOptions
         );
+
+      } else if (shape === 'triangle') {
+        // Create triangle using Matter.Bodies.polygon and rotate to match CSS clip-path orientation
+        const radius = Math.min(rect.width, rect.height) / 2.2;
+        body = Matter.Bodies.polygon(centerX, centerY, 3, radius, defaultOptions);
+
       } else {
         // Default rectangular boundary
         body = Matter.Bodies.rectangle(

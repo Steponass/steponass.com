@@ -1,6 +1,7 @@
 <script>
-  import { projects } from "@lib/data/projectsData.js";
+    import { projects } from "@lib/data/projectsData.js";
   import ProjectCard from "@/lib/components/ProjectCard.svelte";
+  import ProjectModal from "@/sections/ProjectModal.svelte";
   import { physicsRegister } from "@lib/actions/physicsRegister.js";
   import { scrollAnimation } from "@lib/actions/scrollAnimation.js";
 
@@ -13,22 +14,21 @@
   function closeModal() {
     activeModal = null;
   }
+
 </script>
 
 <section class="projects-section" id="projects">
-  <div class="section-title-container">
+  <div
+  class="section-title-container">
     <h2
-      class="projects-title section-title"
-      use:physicsRegister={{
-        restitution: 0.8,
-        friction: 0.2,
-        label: "projects-title",
-        shape: "text-rectangle",
-      }}
-      use:scrollAnimation
-    >
-      Projects
-    </h2>
+    class="projects-title section-title"
+    use:physicsRegister={{
+      restitution: 0.8,
+      friction: 0.2,
+      label: "projects-title",
+      shape: "text-rectangle",
+    }}
+    use:scrollAnimation>Projects</h2>
   </div>
 
   <div class="projects-container">
@@ -37,29 +37,18 @@
         <ProjectCard
           title={project.title}
           description={project.description}
-          techStack={project.techStack}
-          shape={project.gridArea === "item6" ? "rotated" : "default"}
+          projectData={project}
           onOpenModal={handleOpenModal}
         />
       </div>
     {/each}
   </div>
 
-  <!-- Placeholder for modal component -->
   {#if activeModal}
-    <div class="modal-placeholder">
-      <!-- We'll replace this with a proper modal component later -->
-      <div class="modal-content">
-        <button on:click={closeModal}>Close</button>
-        <h3>{activeModal.title}</h3>
-        <p>{activeModal.description}</p>
-        <div class="tech-list">
-          {#each activeModal.techStack as tech}
-            <span>{tech}</span>
-          {/each}
-        </div>
-      </div>
-    </div>
+    <ProjectModal
+      projectData={activeModal}
+      onClose={closeModal}
+    />
   {/if}
 </section>
 
@@ -109,40 +98,6 @@
     grid-area: item5;
   }
 
-  /* Modal placeholder styles - will be replaced with proper modal later */
-  .modal-placeholder {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: var(--z-index-highest);
-  }
-
-  .modal-content {
-    padding: 5%;
-    border-radius: var(--radius-8px);
-    width: min(90%, 1024px);
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-
-  .tech-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2%;
-    margin-top: 5%;
-  }
-
-  .tech-list span {
-    padding: 1% 3%;
-    border-radius: var(--radius-4px);
-    background-color: rgba(0, 0, 0, 0.05);
-  }
 
   /* Tablet breakpoint - 2 column layout */
   @media (max-width: 1600px) and (min-width: 769px) {
@@ -185,5 +140,6 @@
     .project-cell > :global(*) {
       max-width: 90%;
     }
+    
   }
 </style>

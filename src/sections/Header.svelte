@@ -10,7 +10,12 @@
 
   <!-- The actual sign that acts as a physics boundary -->
   <nav class="sign-board">
+    <ThemeToggle />
     <ul class="nav-links">
+
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#contact">Contact</a></li>
       <li class="cv-item">
         <a href="/resume/CV - Steponas Dabuzinskas - Our Web Guy.pdf" download="Steponas-Dabuzinskas-Resume.pdf" target="_blank">
           CV
@@ -21,12 +26,8 @@
           </div>
         </a>
       </li>
-      <li><a href="#projects">Projects</a></li>
-      <li><a href="#skills">Skills</a></li>
-      <li><a href="#contact">Contact</a></li>
-
     </ul>
-    <ThemeToggle />
+
   </nav>
 </header>
 
@@ -108,7 +109,7 @@
   .cv-item a {
     display: flex;
     align-items: center;
-    gap: var(--space-4px);
+    gap: var(--space-8px);
   }
 
   .cv-icon {
