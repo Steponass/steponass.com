@@ -34,7 +34,7 @@ export const projects = [
     title: "Our Project?",
     description: "…This could be something beautiful!",
     techStack: ["Framework", "Library", "Database"],
-    gridArea: "item7",
+    gridArea: "item5",
   },
 ];
 
