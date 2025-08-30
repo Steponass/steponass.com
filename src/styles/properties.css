@@ -30,30 +30,75 @@
   inherits: false;
 }
 
-/* COLOR */
+/* COLORS AND SHADOWS */
 
 /* LIGHT THEME (default) */
-:root,
-:root[data-theme="light"] {
+[data-theme="light"] {
   --clr-primary: oklch(0.8703 0.176 91.91);
-  --clr-bg: oklch(0.9899 0.0164 95.22);
+  --clr-bg-base:   hsl(48, 100%, 96%);
+  --clr-bg-raised: hsl(48, 100%, 97%);
+  --clr-bg-overlay:hsl(48, 100%, 98%);
+
+
   --clr-txt-strong: oklch(0.1339 0.0026 106.74);
-  --clr-txt-weak: oklch(0.2761 0.0091 97.67);
+  --clr-txt-weak: oklch(0.2652 0.0079 84.59);
+  --clr-stroke-strong: hsl(48, 50%, 65%);
+  --clr-stroke-weak:   hsl(48, 29%, 80%);
+
+  /* SHADOWS */
+/* 1st - "direct"
+   2nd - "ambient" */
+
+   /* TBD */
+  --shadow-elevation-1: 
+  0    2px 3px -1px hsla(0, 0%, 26%, 0.3),
+  0 -0.5px 1px      hsla(0, 0%, 10%, 0.1);
+
+
+  /* Divs with physics boundaries */
+--shadow-elevation-2: 
+  0 4px 6px hsla(0, 0%, 25%, 0.15),
+  0 3px 1px -1px hsla(0, 0%, 18%, 0.5);
+
+  /* Header (sign; strings use el-1) */
+--shadow-elevation-3: 
+  0 4px 8px -1px hsla(0, 0%, 30%, 0.15),
+  0  2px 3px -1px hsla(0, 0%, 16%, 0.4);
+
+     /* TBD */
+--shadow-elevation-4: 
+  0 8px 16px hsla(0, 0%, 16%, 0.35),
+  0 3px  6px hsla(0, 0%, 12%, 0.15);
+
+   /* TBD - prolly modal/dialog*/
+--shadow-elevation-5: 
+  0 10px 16px -3px hsla(0, 0%, 30%, 0.4);
+
+  /* Section titles */
+--text-shadow-1:
+  0    1px 3px hsla(0, 0%, 26%, 0.1),
+  0 1px 0px      hsla(320, 91%, 17%, 0.651);
+
 }
 
 /* DARK THEME  */
 :root[data-theme="dark"] {
   --clr-primary: oklch(0.8715 0.174 92.47);
-  --clr-bg: oklch(0.1961 0.0042 84.59);
-  --clr-txt-strong: oklch(0.9856 0.0017 67.8);
-  --clr-txt-weak: oklch(0.9301 0.0081 98.88);
+  --clr-bg-base: oklch(0.1961 0.0039 95.26);
+  --clr-bg-raised: hsl(48, 6%, 12%);
+  --clr-bg-overlay:hsl(48, 6%, 16%);
+  --clr-stroke-strong: hsl(48, 60%, 20%);
+  --clr-stroke-weak:   hsl(48, 60%, 15%);
+  
+  --clr-txt-strong: oklch(0.9875 0.0026 106.45);
+  --clr-txt-weak: oklch(0.9299 0.0084 95.14);
 }
 
 
 
-:root {
 
-  /* SPACING */
+/* SPACING, RADIUS */
+:root {
   --space-4px: 4px;
   --space-8px: 8px;
   --space-12px: 12px;
@@ -73,6 +118,7 @@
   --space-32-48px: clamp(32px, 28.1165px + 1.0356vw, 48px);
   --space-48-64px: clamp(48px, 44.1165px + 1.0356vw, 64px);
   --space-64-96px: clamp(64px, 56.233px + 2.0712vw, 96px);
+
 
   /* BORDER RADIUS */
   --radius-2px: 2px;

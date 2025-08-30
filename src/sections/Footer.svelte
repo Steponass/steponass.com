@@ -124,6 +124,8 @@
 
 <style>
   .footer-section {
+    max-width: 1920px;
+    margin-inline: auto;
     display: flex;
     gap: 10%;
     padding-inline: 4%;

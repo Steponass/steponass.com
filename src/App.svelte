@@ -39,5 +39,7 @@
     position: relative;
     max-width: 1920px;
     margin-inline: auto;
+    /* border: 2px solid black; */
+    outline: var(--clr-stroke-weak) solid 4px;
   }
 </style>

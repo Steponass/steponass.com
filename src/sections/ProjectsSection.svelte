@@ -36,7 +36,6 @@
         <ProjectCard
           title={project.title}
           description={project.description}
-          techStack={project.techStack}
           shape={project.gridArea === "item6" ? "rotated" : "default"}
           onOpenModal={handleOpenModal}
         />

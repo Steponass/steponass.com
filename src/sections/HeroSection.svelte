@@ -79,6 +79,7 @@
     translate: 0 0;
     transition: all 0.5s ease;
     scale: 1;
+    text-shadow: var(--text-shadow-1);
     @starting-style {
       translate: 0 -100%;
       scale: 0;
@@ -96,10 +97,12 @@
     margin-top: var(--space-24-32px);
     border-radius: var(--radius-4px);
     background-color: var(--clr-primary);
+    border: 1px solid var(--clr-stroke-strong);
+    box-shadow: var(--shadow-elevation-2);
     cursor: pointer;
     opacity: 1;
     translate: 0 0;
-    clip-path: inset(0 0 0% 0);
+    clip-path: inset(0 0 -10% 0);
     transition: all 0.4s 1.9s ease;
     &:disabled {
     /*--clr-ball-dragged, used only as # in physicsEngine */

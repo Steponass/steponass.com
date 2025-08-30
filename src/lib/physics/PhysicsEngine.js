@@ -255,36 +255,8 @@ export class PhysicsEngine {
     }
   }
 
-  /**
-  * Draw debug boundaries so we can see the invisible walls
-  */
-  renderDebugBoundaries() {
-    this.ctx.save();
+// Removed draw debug boundaries, see Onenote/Steponass.com - Notes
 
-    // Draw viewport boundaries (green)
-    if (this.boundaries.length) {
-      this.ctx.strokeStyle = '#00ff00';
-      this.ctx.lineWidth = 2;
-      this.ctx.setLineDash([5, 5]);
-
-      this.boundaries.forEach(boundary => {
-        this.drawBoundaryDebug(boundary, '#00ff00', 'viewport');
-      });
-    }
-
-    // Draw DOM boundaries (blue)
-    if (this.domBoundaries.length) {
-      this.ctx.strokeStyle = '#0066ff';
-      this.ctx.lineWidth = 2;
-      this.ctx.setLineDash([3, 3]);
-
-      this.domBoundaries.forEach(boundaryInfo => {
-        this.drawBoundaryDebug(boundaryInfo.body, '#0066ff', 'DOM');
-      });
-    }
-
-    this.ctx.restore();
-  }
 
   /**
    * Helper method to draw a single boundary

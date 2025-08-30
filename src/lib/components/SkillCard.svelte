@@ -20,12 +20,14 @@ use:physicsRegister={{
   .skill-item {
     width: 100%;
     aspect-ratio: 1;
-    background: lightgrey;
     border-radius: 50%;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
+    background-color: var(--clr-bg-raised);
+    border: 1px solid var(--clr-stroke-strong);
+    box-shadow: var(--shadow-elevation-2);
   }
 </style>

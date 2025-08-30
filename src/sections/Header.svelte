@@ -63,6 +63,7 @@
       rgba(0, 0, 0, 0.6)
     );
     transform-origin: top center;
+    box-shadow: var(--shadow-elevation-1);
   }
 
   .left-string {
@@ -85,10 +86,12 @@
     padding-inline: var(--space-16-24px);
     gap: var(--space-12-16px);
     pointer-events: auto;
-    background: lightgrey;
     border-radius: var(--radius-8px);
     position: relative;
     overflow: hidden;
+    background: var(--clr-bg-raised);
+    border: 1px solid var(--clr-stroke-weak);
+    box-shadow: var(--shadow-elevation-3);
   }
 
   .nav-links {

@@ -17,7 +17,6 @@
       });
     }
   }
-
 </script>
 
 <div
@@ -35,13 +34,13 @@
   tabindex="0"
   on:keydown={(e) => e.key === "Enter" && handleCardClick()}
 >
-  <div class="card-content">
-    <h3>{title}</h3>
-    <p>{description}</p>
-    <div class="tech-stack">
-      {#each techStack as tech}
-        <span class="tech-item">{tech}</span>
-      {/each}
+  <div class="project-card-content">
+    <div class="project-card-text">
+      <h3>{title}</h3>
+      <p>{description}</p>
+    </div>
+    <div class="project-card-illustration">
+        <img class="placeholder" alt="pipi">
     </div>
   </div>
 </div>
@@ -49,39 +48,50 @@
 <style>
   .project-card {
     width: 100%;
-    min-height: 440px;
-    background: lightgrey;
     border-radius: var(--radius-8px);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     cursor: pointer;
-    position: relative;
     transition: transform 0.2s ease-in-out;
+    box-shadow: var(--shadow-elevation-2);
+    background-color: var(--clr-bg-raised);
+    border: 1px solid var(--clr-stroke-strong);
+    container-type: inline-size;
   }
 
-  .rotated .card-content {
+  .rotated .project-card-content {
     transform: rotate(-45deg);
     text-align: center;
   }
 
-  .card-content {
-    padding: 5%;
+  .project-card-content {
+    padding: var(--space-16-24px);
     width: 100%;
-    display: flex;
-    flex-direction: column;
+    height: 100%;
+    display: grid;
+    justify-items: center;
+    align-items: center;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+    gap: var(--space-12-16px);
   }
 
-  .tech-stack {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2%;
-    margin-top: 5%;
+  /* When card is narrow (<960px), use vertical layout */
+  @container (max-width: 959px) {
+    .project-card-content {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr;
+    justify-items: center;
+    align-items: center;
+    }
   }
 
-  .tech-item {
-    padding: 1% 3%;
-    background-color: rgba(0, 0, 0, 0.05);
+  .project-card-content p {
+    margin-top: var(--space-16-24px);
+    font-size: var(--fs-h6);
+  }
+
+  .project-card-illustration {
+    min-width: 200px;
+    min-height: 200px;
+    background-color: var(--clr-stroke-weak);
   }
 </style>
